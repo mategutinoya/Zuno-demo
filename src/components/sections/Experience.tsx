@@ -10,32 +10,32 @@ gsap.registerPlugin(ScrollTrigger);
 
 export const SHOTS = [
   {
-    src: "/experience/photo-pink-lychee.jpg",
-    title: "Fresh Cut",
-    kicker: "Pink Lychee",
-    text: "Lychee, frambuesa y una burbuja fina. Cada sabor empieza en la fruta.",
-    alt: "Botella ZUNO Pink Lychee entre lychees y frambuesas, con salpicaduras rosas",
-  },
-  {
-    src: "/experience/photo-mango-passion.jpg",
+    src: "/experience/golden-hour.jpg",
     title: "Golden Hour",
-    kicker: "Mango Passion",
-    text: "Mango maduro y maracuyá. El atardecer tropical, servido bien frío.",
-    alt: "Botella ZUNO Mango Passion con mango en cubos, maracuyá y salpicaduras doradas",
+    kicker: "Atardeceres tropicales",
+    text: "Cuando el sol baja y la conversación sube. Mango Passion, hielo y nada de prisa.",
+    alt: "Botella ZUNO Mango Passion al atardecer, con palmeras y cielo naranja",
   },
   {
-    src: "/experience/photo-achachairu-citrus.jpg",
-    title: "Bright Side",
-    kicker: "Achachairú Citrus",
-    text: "Achachairú y lima: ácido, luminoso y con condensación en cada gota.",
-    alt: "Botella ZUNO Achachairú Citrus con achachairús, lima y salpicaduras verdes",
+    src: "/experience/fresh-cut.jpg",
+    title: "Fresh Cut",
+    kicker: "Fruta como punto de partida",
+    text: "Lychee, frambuesa y una burbuja fina. Cada sabor empieza en la fruta.",
+    alt: "Botella ZUNO Pink Lychee rodeada de lychees y frambuesas frescas",
   },
   {
-    src: "/experience/photo-berry-mood.jpg",
-    title: "Night Mood",
-    kicker: "Berry Mood",
-    text: "Mora y arándano para las noches que piden algo más intenso.",
-    alt: "Botella ZUNO Berry Mood rodeada de moras y arándanos con salpicaduras violetas",
+    src: "/experience/ice-cold.jpg",
+    title: "Ice Cold",
+    kicker: "Condensación, el ritual",
+    text: "Servida bien fría. Las gotas en el vidrio anuncian lo que viene.",
+    alt: "Primer plano de una botella ZUNO Berry Mood cubierta de gotas de condensación",
+  },
+  {
+    src: "/experience/lineup.jpg",
+    title: "The Lineup",
+    kicker: "Cuatro maneras de brindar",
+    text: "Pink Lychee, Mango Passion, Achachairú Citrus y Berry Mood. Elige tu vuelta.",
+    alt: "Las cuatro botellas ZUNO alineadas sobre una superficie de mármol",
   },
 ] as const;
 
@@ -68,9 +68,9 @@ export function Experience() {
       tr.querySelectorAll<HTMLElement>("[data-parallax]").forEach((img) => {
         gsap.fromTo(
           img,
-          { xPercent: -4 },
+          { xPercent: -8 },
           {
-            xPercent: 4,
+            xPercent: 8,
             ease: "none",
             scrollTrigger: {
               trigger: img.parentElement,
@@ -126,27 +126,29 @@ export function Experience() {
           {SHOTS.map((s, i) => (
             <figure
               key={s.src}
-              className="group relative w-[min(72vw,calc(70svh*0.435))] shrink-0 snap-start md:w-[calc(66vh*0.435)]"
+              className="group relative w-[85vw] shrink-0 snap-start md:w-auto"
             >
-              <div className="relative aspect-[330/758] max-h-[70svh] overflow-hidden rounded-[1.75rem] bg-[#241a2c] md:h-[66vh] md:max-h-none">
-                <div data-parallax className="absolute inset-y-0 -inset-x-[5%]">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-[#241a2c] md:aspect-auto md:h-[72vh] md:w-[min(46vw,calc(72vh*1.25))]">
+                <div data-parallax className="absolute inset-[-8%]">
                   <Image
                     src={s.src}
                     alt={s.alt}
                     fill
-                    sizes="(max-width: 768px) 72vw, 30vw"
+                    sizes="(max-width: 768px) 85vw, 50vw"
                     className="object-cover transition-transform duration-[1.6s] ease-(--ease-premium) group-hover:scale-[1.04]"
+                    priority={false}
                   />
                 </div>
-                <span className="eyebrow absolute top-5 left-5 rounded-full bg-black/35 px-3 py-1.5 backdrop-blur-md">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
+                <span className="eyebrow absolute top-5 left-5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-md">
                   0{i + 1}
                 </span>
+                <figcaption className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                  <p className="eyebrow text-cream/70">{s.kicker}</p>
+                  <h3 className="display mt-2 text-4xl md:text-6xl">{s.title}</h3>
+                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-cream/75">{s.text}</p>
+                </figcaption>
               </div>
-              <figcaption className="pt-5">
-                <p className="eyebrow text-cream/55">{s.kicker}</p>
-                <h3 className="display mt-2 text-4xl md:text-5xl">{s.title}</h3>
-                <p className="mt-2 max-w-[22rem] text-sm leading-relaxed text-cream/70">{s.text}</p>
-              </figcaption>
             </figure>
           ))}
 
