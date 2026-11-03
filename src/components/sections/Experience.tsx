@@ -135,6 +135,7 @@ export function Experience() {
                     alt={s.alt}
                     fill
                     sizes="(max-width: 768px) 72vw, 30vw"
+                    loading="eager"
                     className="object-cover transition-transform duration-[1.6s] ease-(--ease-premium) group-hover:scale-[1.04]"
                   />
                 </div>
