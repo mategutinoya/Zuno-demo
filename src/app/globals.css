@@ -11,6 +11,7 @@
 
   --font-brand: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   --font-hand: var(--font-marker), "Comic Sans MS", cursive;
+  --font-editorial: var(--font-serif-face), "Iowan Old Style", Georgia, serif;
 
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-swift: cubic-bezier(0.65, 0, 0.35, 1);

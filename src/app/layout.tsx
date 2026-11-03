@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Permanent_Marker } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Serif, Permanent_Marker } from "next/font/google";
 import "./globals.css";
 import { SITE } from "@/lib/site";
 
@@ -7,6 +7,14 @@ const display = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-display",
   axes: ["opsz", "wdth"],
+  display: "swap",
+});
+
+const editorial = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif-face",
   display: "swap",
 });
 
@@ -44,7 +52,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${display.variable} ${marker.variable}`}>
+    <html lang="es" className={`${display.variable} ${marker.variable} ${editorial.variable}`}>
       <body>{children}</body>
     </html>
   );

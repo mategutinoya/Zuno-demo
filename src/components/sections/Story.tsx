@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useReveal } from "@/components/ui/useReveal";
-import { Crown } from "@/components/brand/ZunoLogo";
+import { ZunoLogo } from "@/components/brand/ZunoLogo";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -92,9 +92,14 @@ export function Story() {
           </div>
 
           <div className="flex flex-col justify-center md:col-span-6 md:col-start-7">
-            <Crown className="h-7 w-auto self-start text-hot" />
-            <p data-reveal className="mt-8 text-2xl leading-snug font-medium md:text-[2.1rem] md:leading-[1.25]">
-              ZUNO nace de una idea sencilla: <span className="text-hot">hacer las cosas diferentes.</span> Una nueva
+            <p data-reveal className="font-editorial text-[2rem] leading-[1.18] tracking-[-0.01em] md:text-[2.75rem] md:leading-[1.14]">
+              {/* the brand mark itself opens the sentence, crown sitting on the Z */}
+              <ZunoLogo
+                className="inline-block h-[1.3em] w-auto align-[-0.27em]"
+                crownColor="#F05A9D"
+                title="ZUNO"
+              />{" "}
+              nace de una idea sencilla: <em className="text-hot">hacer las cosas diferentes.</em> Una nueva
               interpretación de las bebidas frutales, donde el diseño, la personalidad y el sabor construyen una
               experiencia propia.
             </p>
