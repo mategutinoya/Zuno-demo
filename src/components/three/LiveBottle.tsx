@@ -200,10 +200,16 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
 
     // ---- liquid follows flavour colour
     const liq = director.flavorLiquid;
-    materials.liquid.color.copy(liq);
-    materials.liquid.emissive.copy(liq).multiplyScalar(0.32);
+    if (materials.liquid.transmission > 0) {
+      materials.liquid.color.copy(liq).lerp(white, 0.2);
+      materials.liquid.attenuationColor.copy(liq);
+      materials.liquid.emissive.copy(liq).multiplyScalar(0.16);
+    } else {
+      materials.liquid.color.copy(liq);
+      materials.liquid.emissive.copy(liq).multiplyScalar(0.32);
+    }
     materials.liquid.sheenColor.copy(liq).lerp(white, 0.55);
-    materials.bubble.color.copy(liq).lerp(white, 0.6);
+    materials.bubble.color.copy(liq).lerp(white, 0.4);
     materials.bubble.emissive.copy(liq).lerp(white, 0.5).multiplyScalar(0.25);
   });
 

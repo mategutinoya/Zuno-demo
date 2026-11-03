@@ -12,7 +12,56 @@ let condensation: ReturnType<typeof createCondensationMaps> | null = null;
 let capTop: THREE.Texture | null = null;
 const getCondensation = () => (condensation ??= createCondensationMaps());
 
+/* ---------------------------------------------------------- shader patches */
+
+const FRESNEL = /* glsl */ `
+  float zFr = clamp(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 0.0, 1.0);
+`;
+
+/** Liquid reads as a lit, translucent volume: glowing core, dense rim, lighter toward the top. */
+function patchLiquid(m: THREE.MeshPhysicalMaterial, seeThrough = false) {
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying float vLiqY;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvLiqY = position.y;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying float vLiqY;")
+      .replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>
+        ${FRESNEL}
+        float zDepth = smoothstep(-1.74, 0.6, vLiqY);
+        totalEmissiveRadiance *= mix(2.1, 0.06, pow(zFr, 1.3)) * mix(0.55, 1.15, zDepth);
+        diffuseColor.rgb *= mix(1.0, 0.42, pow(zFr, 1.7)) * mix(0.72, 1.06, zDepth);`,
+      );
+    if (seeThrough) {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <opaque_fragment>",
+        `#include <opaque_fragment>
+        gl_FragColor.a = mix(0.78, 0.97, pow(zFr, 1.2));`,
+      );
+    }
+  };
+  m.customProgramCacheKey = () => (seeThrough ? "zuno-liquid-a" : "zuno-liquid");
+}
+
+/** Without transmission: nearly invisible face-on, reflective and denser at the edges. */
+function patchFresnelGlass(m: THREE.MeshPhysicalMaterial, min: number, max: number, key: string) {
+  m.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <opaque_fragment>",
+      `#include <opaque_fragment>
+      ${FRESNEL}
+      gl_FragColor.a = mix(${min.toFixed(3)}, ${max.toFixed(3)}, pow(zFr, 2.3));
+      gl_FragColor.rgb *= mix(vec3(1.0), vec3(0.74, 0.84, 0.79), pow(zFr, 2.0));`,
+    );
+  };
+  m.customProgramCacheKey = () => key;
+}
+
 export interface BottleMaterials {
+  /** back faces of the glass, to show wall thickness above the liquid */
+  innerWall: THREE.MeshPhysicalMaterial;
   glass: THREE.MeshPhysicalMaterial;
   liquid: THREE.MeshPhysicalMaterial;
   label: THREE.MeshPhysicalMaterial;
@@ -40,48 +89,54 @@ export function createBottleMaterials(
   capTop ??= createCapTopTexture();
 
   const low = quality === "low";
-  return {
-    // Phones: transparent glass with studio reflections instead of real
-    // transmission, which would render the whole scene a second time per frame.
-    glass: low
-      ? (new THREE.MeshPhysicalMaterial({
-          color: "#ffffff",
-          transparent: true,
-          opacity: 0.2,
-          roughness: 0.06,
-          normalMap: glassNormal,
-          normalScale: new THREE.Vector2(0.35, 0.35),
-          clearcoat: 1,
-          clearcoatRoughness: 0.05,
-          envMapIntensity: 1.8,
-          depthWrite: false,
-        }) as THREE.MeshPhysicalMaterial)
-      : new THREE.MeshPhysicalMaterial({
+  const mats: BottleMaterials = {
+    // The glass is a reflective Fresnel shell; on desktop the refraction lives in
+    // the liquid (real transmission). Phones skip transmission entirely: it would
+    // render the whole scene a second time per frame.
+    glass: new THREE.MeshPhysicalMaterial({
       color: "#ffffff",
-      transmission: 1,
-      thickness: 0.55,
-      ior: 1.5,
-      roughness: 0.55,
+      transparent: true,
+      roughness: 0.04,
       roughnessMap: glassRough,
       normalMap: glassNormal,
-      normalScale: new THREE.Vector2(0.45, 0.45),
+      normalScale: new THREE.Vector2(0.32, 0.32),
       clearcoat: 1,
-      clearcoatRoughness: 0.06,
+      clearcoatRoughness: 0.04,
       specularIntensity: 1,
-      envMapIntensity: 1.35,
-      attenuationColor: new THREE.Color("#fff6fb"),
-      attenuationDistance: 4,
+      envMapIntensity: 2.2,
+      depthWrite: false,
+    }),
+    liquid: low
+      ? new THREE.MeshPhysicalMaterial({
+          color: liquid.clone(),
+          emissive: liquid.clone().multiplyScalar(0.32),
+          roughness: 0.08,
+          clearcoat: 1,
+          clearcoatRoughness: 0.04,
+          envMapIntensity: 0.7,
+          transparent: true,
+        })
+      : new THREE.MeshPhysicalMaterial({
+          // a real refracting volume, tinted by absorption: deeper where thicker
+          color: liquid.clone().lerp(new THREE.Color("#ffffff"), 0.2),
+          transmission: 1,
+          thickness: 1.1,
+          ior: 1.34,
+          roughness: 0.04,
+          attenuationColor: liquid.clone(),
+          attenuationDistance: 0.9,
+          emissive: liquid.clone().multiplyScalar(0.16),
+          clearcoat: 1,
+          clearcoatRoughness: 0.04,
+          envMapIntensity: 0.8,
         }),
-    liquid: new THREE.MeshPhysicalMaterial({
-      color: liquid.clone(),
-      emissive: liquid.clone().multiplyScalar(0.32),
-      roughness: 0.18,
-      clearcoat: 1,
-      clearcoatRoughness: 0.1,
-      sheen: 1,
-      sheenRoughness: 0.35,
-      sheenColor: liquid.clone().lerp(new THREE.Color("#ffffff"), 0.55),
-      envMapIntensity: 0.9,
+    innerWall: new THREE.MeshPhysicalMaterial({
+      color: "#ffffff",
+      transparent: true,
+      side: THREE.BackSide,
+      roughness: 0.03,
+      envMapIntensity: 1.4,
+      depthWrite: false,
     }),
     label: new THREE.MeshPhysicalMaterial({
       map: label,
@@ -109,6 +164,10 @@ export function createBottleMaterials(
       roughness: 0.1,
     }),
   };
+  patchLiquid(mats.liquid, low);
+  patchFresnelGlass(mats.glass, low ? 0.04 : 0.03, low ? 0.8 : 0.72, low ? "zuno-glass-low" : "zuno-glass");
+  patchFresnelGlass(mats.innerWall, 0.0, 0.32, "zuno-glass-inner");
+  return mats;
 }
 
 const dropGeo = new THREE.SphereGeometry(1, 10, 8);
@@ -170,7 +229,7 @@ export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
       a: r() * Math.PI * 2,
       y: r(),
       speed: 0.04 + r() * 0.08,
-      size: 0.006 + r() * 0.012,
+      size: 0.004 + r() * 0.008,
       wobble: r() * 10,
     }));
   }, [bubbleCount, seed]);
@@ -206,10 +265,11 @@ export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
   return (
     <group ref={ref}>
       <group position-y={BOTTLE.centerOffset}>
-        <mesh name="liquid" geometry={geo.liquid} material={materials.liquid} />
+        <mesh name="liquid" geometry={geo.liquid} material={materials.liquid} renderOrder={0} />
         <mesh name="neckFlow" geometry={neckFlowGeo} material={materials.liquid} visible={false} />
         <instancedMesh name="bubbles" ref={bubblesRef} args={[bubbleGeo, materials.bubble, bubbleCount]} frustumCulled={false} />
-        <mesh geometry={geo.glass} material={materials.glass} />
+        <mesh geometry={geo.glass} material={materials.innerWall} scale={[0.93, 0.996, 0.93]} renderOrder={1} />
+        <mesh geometry={geo.glass} material={materials.glass} renderOrder={2} />
         <mesh geometry={labelGeo} material={materials.label} position-y={LABEL.centerY} />
         <instancedMesh ref={dropsRef} args={[dropGeo, materials.drop, dropCount]} frustumCulled={false} />
         <mesh name="cap" geometry={geo.cap} position-y={1.53} material={[materials.cap, materials.capTop, materials.cap]} />
