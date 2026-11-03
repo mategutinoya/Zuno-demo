@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hot: #f05a9d;
+  --color-blush: #f8c5da;
+  --color-tangerine: #ff9b42;
+  --color-lime: #c8d957;
+  --color-grape: #8054a8;
+  --color-ink: #17131b;
+  --color-cream: #fff8f2;
+
+  --font-brand: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-marker), "Comic Sans MS", cursive;
+
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-swift: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  html,
+  body {
+    background: var(--color-ink);
+    color: var(--color-cream);
+  }
+  body {
+    font-family: var(--font-brand);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: var(--color-hot);
+    color: var(--color-cream);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-tangerine);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  button {
+    cursor: pointer;
+  }
+}
+
+@utility display {
+  font-family: var(--font-brand);
+  font-weight: 800;
+  font-variation-settings: "wdth" 75, "opsz" 96;
+  letter-spacing: -0.012em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+
+@utility eyebrow {
+  font-family: var(--font-brand);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+@utility container-x {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 1480px;
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+@utility text-outline {
+  -webkit-text-stroke: 1.5px currentColor;
+  color: transparent;
+}
+
+/* Static fallback behind the WebGL stage (and while it boots) */
+.stage-gradient {
+  background:
+    radial-gradient(60% 50% at 25% 35%, #f7a6cb88 0%, transparent 70%),
+    radial-gradient(50% 45% at 80% 70%, #f7a6cb55 0%, transparent 70%),
+    linear-gradient(180deg, #6b3f9e 0%, #b04a98 55%, #ee4f95 100%);
+}
+
+html[data-webgl="false"] [data-fallback-bg] {
+  background: var(--fallback-bg);
+  transition: background 0.8s var(--ease-premium);
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* marquee */
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.animate-marquee {
+  animation: marquee 38s linear infinite;
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(220%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
