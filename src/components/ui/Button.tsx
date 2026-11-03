@@ -15,7 +15,7 @@ interface Props {
 
 const styles: Record<Variant, string> = {
   solid: "bg-cream text-ink hover:bg-white",
-  ghost: "border border-current/35 text-current hover:border-current backdrop-blur-sm",
+  ghost: "border border-current/35 text-current hover:border-current md:backdrop-blur-sm",
   light: "bg-ink text-cream hover:bg-black",
   dark: "bg-hot text-cream hover:bg-[#ff69ac]",
 };

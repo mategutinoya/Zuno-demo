@@ -39,8 +39,8 @@ function pourPhases(s: number) {
 export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quality: Quality }) {
   const group = useRef<THREE.Group>(null);
   const materials = useMemo(
-    () => createBottleMaterials(FLAVORS[flavorStore.get()].liquid, labels[flavorStore.get()]),
-    [labels],
+    () => createBottleMaterials(FLAVORS[flavorStore.get()].liquid, labels[flavorStore.get()], quality),
+    [labels, quality],
   );
   const spin = useRef({ value: 0 });
   const shownFlavor = useRef(flavorStore.get());
@@ -143,12 +143,20 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     const scrollS = window.scrollY / Math.max(1, window.innerHeight);
     const ph = reduce || e < 0.98 ? pourPhases(0) : pourPhases(scrollS);
 
-    g.position.set(P.x + pointer.current.x * 0.08, P.y + float + introY, 0);
-    g.scale.setScalar(Math.max(P.s * introScale, 0.0001));
+    // while pouring, hold the bottle in frame instead of letting it scroll away;
+    // on narrow screens tip it a little less and shift it left so the neck stays visible
+    const narrow = director.worldW / director.worldH < 0.8;
+    const hold = ph.tilt * scrollS * director.worldH * 0.85;
+    const shiftX = narrow ? -ph.tilt * director.worldW * 0.06 : 0;
+    const pourScale = narrow ? 1 - 0.28 * ph.tilt : 1;
+    const tiltAngle = narrow ? 1.8 : 2.05;
+
+    g.position.set(P.x + pointer.current.x * 0.08 + shiftX, P.y + float + introY - hold, 0);
+    g.scale.setScalar(Math.max(P.s * introScale * pourScale, 0.0001));
     g.rotation.set(
       P.rx - pointer.current.y * 0.14 + vel * 0.6 + (reduce ? 0 : Math.sin(t * 0.7) * 0.02),
       P.ry + pointer.current.x * 0.45 + spin.current.value + introSpin,
-      P.rz - pointer.current.x * 0.05 + vel * 0.25 + (reduce ? 0 : Math.sin(t * 0.9) * 0.025) - ph.tilt * 2.05,
+      P.rz - pointer.current.x * 0.05 + vel * 0.25 + (reduce ? 0 : Math.sin(t * 0.9) * 0.025) - ph.tilt * tiltAngle,
     );
 
     if (!parts.current) {

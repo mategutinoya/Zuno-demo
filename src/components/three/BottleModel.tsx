@@ -22,7 +22,11 @@ export interface BottleMaterials {
   bubble: THREE.MeshStandardMaterial;
 }
 
-export function createBottleMaterials(liquidColor: string, label: THREE.Texture | null): BottleMaterials {
+export function createBottleMaterials(
+  liquidColor: string,
+  label: THREE.Texture | null,
+  quality: Quality = "high",
+): BottleMaterials {
   const cond = getCondensation();
   const glassNormal = cond.normalMap.clone();
   glassNormal.repeat.set(3, 2.4);
@@ -35,8 +39,24 @@ export function createBottleMaterials(liquidColor: string, label: THREE.Texture 
   const liquid = new THREE.Color(liquidColor);
   capTop ??= createCapTopTexture();
 
+  const low = quality === "low";
   return {
-    glass: new THREE.MeshPhysicalMaterial({
+    // Phones: transparent glass with studio reflections instead of real
+    // transmission, which would render the whole scene a second time per frame.
+    glass: low
+      ? (new THREE.MeshPhysicalMaterial({
+          color: "#ffffff",
+          transparent: true,
+          opacity: 0.2,
+          roughness: 0.06,
+          normalMap: glassNormal,
+          normalScale: new THREE.Vector2(0.35, 0.35),
+          clearcoat: 1,
+          clearcoatRoughness: 0.05,
+          envMapIntensity: 1.8,
+          depthWrite: false,
+        }) as THREE.MeshPhysicalMaterial)
+      : new THREE.MeshPhysicalMaterial({
       color: "#ffffff",
       transmission: 1,
       thickness: 0.55,
@@ -51,7 +71,7 @@ export function createBottleMaterials(liquidColor: string, label: THREE.Texture 
       envMapIntensity: 1.35,
       attenuationColor: new THREE.Color("#fff6fb"),
       attenuationDistance: 4,
-    }),
+        }),
     liquid: new THREE.MeshPhysicalMaterial({
       color: liquid.clone(),
       emissive: liquid.clone().multiplyScalar(0.32),
@@ -76,7 +96,7 @@ export function createBottleMaterials(liquidColor: string, label: THREE.Texture 
     capTop: new THREE.MeshStandardMaterial({ map: capTop, metalness: 0.75, roughness: 0.32 }),
     drop: new THREE.MeshPhysicalMaterial({
       color: "#ffffff",
-      transmission: 1,
+      ...(low ? { transparent: true, opacity: 0.55, depthWrite: false } : { transmission: 1 }),
       roughness: 0.02,
       thickness: 0.06,
       ior: 1.33,
@@ -121,8 +141,8 @@ export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
   const geo = getBottleGeometry();
   const dropsRef = useRef<THREE.InstancedMesh>(null);
   const bubblesRef = useRef<THREE.InstancedMesh>(null);
-  const dropCount = quality === "high" ? 170 : 70;
-  const bubbleCount = quality === "high" ? 46 : 18;
+  const dropCount = quality === "high" ? 170 : 45;
+  const bubbleCount = quality === "high" ? 46 : 14;
 
   const dropMatrices = useMemo(() => {
     const r = rng(seed);

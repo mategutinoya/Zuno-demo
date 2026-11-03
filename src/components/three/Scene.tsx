@@ -67,18 +67,20 @@ function Content({ mobile }: { mobile: boolean }) {
           <ReadySignal />
         </>
       )}
-      <Particles count={mobile ? 50 : 140} />
+      <Particles count={mobile ? 40 : 140} />
     </>
   );
 }
 
 export default function Scene({ active }: { active: boolean }) {
-  const [mobile] = useState(() => window.matchMedia("(max-width: 767px)").matches);
-  const [dpr, setDpr] = useState<number>(() => Math.min(window.devicePixelRatio, mobile ? 1.5 : 2));
-
-  useEffect(() => {
-    sceneState.isMobile = mobile;
-  }, [mobile]);
+  // phones and small touch tablets get the lighter pipeline
+  const [mobile] = useState(() => {
+    const m = window.matchMedia("(max-width: 767px), (pointer: coarse) and (max-width: 1100px)").matches;
+    sceneState.isMobile = m;
+    return m;
+  });
+  const maxDpr = mobile ? 1.25 : 2;
+  const [dpr, setDpr] = useState<number>(() => Math.min(window.devicePixelRatio, maxDpr));
 
   return (
     <Canvas
@@ -97,7 +99,7 @@ export default function Scene({ active }: { active: boolean }) {
     >
       <PerformanceMonitor
         onDecline={() => setDpr((d) => Math.max(1, d - 0.5))}
-        onIncline={() => setDpr((d) => Math.min(d + 0.25, mobile ? 1.5 : 2))}
+        onIncline={() => setDpr((d) => Math.min(d + 0.25, maxDpr))}
         flipflops={3}
       />
       <Content mobile={mobile} />
