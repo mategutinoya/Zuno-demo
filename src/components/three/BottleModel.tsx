@@ -93,6 +93,8 @@ export function createBottleMaterials(liquidColor: string, label: THREE.Texture 
 
 const dropGeo = new THREE.SphereGeometry(1, 10, 8);
 const bubbleGeo = new THREE.SphereGeometry(1, 8, 6);
+/** liquid running through the neck while pouring (hidden otherwise) */
+const neckFlowGeo = new THREE.CylinderGeometry(0.15, 0.17, 0.95, 24, 1, false).translate(0, 1.0, 0);
 const labelGeo = new THREE.CylinderGeometry(
   LABEL.radius,
   LABEL.radius,
@@ -184,12 +186,13 @@ export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
   return (
     <group ref={ref}>
       <group position-y={BOTTLE.centerOffset}>
-        <mesh geometry={geo.liquid} material={materials.liquid} />
-        <instancedMesh ref={bubblesRef} args={[bubbleGeo, materials.bubble, bubbleCount]} frustumCulled={false} />
+        <mesh name="liquid" geometry={geo.liquid} material={materials.liquid} />
+        <mesh name="neckFlow" geometry={neckFlowGeo} material={materials.liquid} visible={false} />
+        <instancedMesh name="bubbles" ref={bubblesRef} args={[bubbleGeo, materials.bubble, bubbleCount]} frustumCulled={false} />
         <mesh geometry={geo.glass} material={materials.glass} />
         <mesh geometry={labelGeo} material={materials.label} position-y={LABEL.centerY} />
         <instancedMesh ref={dropsRef} args={[dropGeo, materials.drop, dropCount]} frustumCulled={false} />
-        <mesh geometry={geo.cap} position-y={1.53} material={[materials.cap, materials.capTop, materials.cap]} />
+        <mesh name="cap" geometry={geo.cap} position-y={1.53} material={[materials.cap, materials.capTop, materials.cap]} />
       </group>
     </group>
   );

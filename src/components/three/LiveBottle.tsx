@@ -9,9 +9,28 @@ import { director } from "./director";
 import { anchors, sceneState } from "@/lib/sceneState";
 import { flavorStore } from "@/lib/store";
 import { FLAVORS } from "@/lib/flavors";
+import { pour } from "./PourStream";
 
 const damp = THREE.MathUtils.damp;
 const white = new THREE.Color("#ffffff");
+const ss = THREE.MathUtils.smoothstep;
+const mouthLocal = new THREE.Vector3();
+const neckLocal = new THREE.Vector3();
+
+/**
+ * Opening sequence, scrubbed by the first screen of scroll (0 = top, 1 = one viewport down):
+ * cap pops → bottle tips over → liquid pours down → bottle rights itself, cap returns, full again.
+ */
+function pourPhases(s: number) {
+  const back = 1 - ss(s, 0.6, 0.78);
+  return {
+    cap: ss(s, 0.02, 0.16) * back,
+    tilt: ss(s, 0.06, 0.32) * (1 - ss(s, 0.5, 0.72)),
+    head: ss(s, 0.2, 0.36),
+    tail: ss(s, 0.45, 0.56),
+    drain: ss(s, 0.22, 0.5) * back,
+  };
+}
 
 /**
  * The hero bottle. Its pose is a scroll-weighted blend of DOM anchors
@@ -27,6 +46,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
   const shownFlavor = useRef(flavorStore.get());
   const pose = useRef({ x: 0, y: 0, s: 0.0001, rx: 0, ry: 0, rz: 0, init: false });
   const pointer = useRef({ x: 0, y: 0 });
+  const parts = useRef<{ cap: THREE.Object3D; liquid: THREE.Object3D; bubbles: THREE.Object3D; neck: THREE.Object3D } | null>(null);
 
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
 
@@ -119,13 +139,56 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
 
     const float = reduce ? 0 : Math.sin(t * 1.1) * 0.045 * P.s * BOTTLE.height * 0.3;
 
+    // ---- opening pour (only at the very top of the page)
+    const scrollS = window.scrollY / Math.max(1, window.innerHeight);
+    const ph = reduce || e < 0.98 ? pourPhases(0) : pourPhases(scrollS);
+
     g.position.set(P.x + pointer.current.x * 0.08, P.y + float + introY, 0);
     g.scale.setScalar(Math.max(P.s * introScale, 0.0001));
     g.rotation.set(
       P.rx - pointer.current.y * 0.14 + vel * 0.6 + (reduce ? 0 : Math.sin(t * 0.7) * 0.02),
       P.ry + pointer.current.x * 0.45 + spin.current.value + introSpin,
-      P.rz - pointer.current.x * 0.05 + vel * 0.25 + (reduce ? 0 : Math.sin(t * 0.9) * 0.025),
+      P.rz - pointer.current.x * 0.05 + vel * 0.25 + (reduce ? 0 : Math.sin(t * 0.9) * 0.025) - ph.tilt * 2.05,
     );
+
+    if (!parts.current) {
+      const cap = g.getObjectByName("cap");
+      const liquid = g.getObjectByName("liquid");
+      const bubbles = g.getObjectByName("bubbles");
+      const neck = g.getObjectByName("neckFlow");
+      if (cap && liquid && bubbles && neck) parts.current = { cap, liquid, bubbles, neck };
+    }
+    const pp = parts.current;
+    if (pp) {
+      // cap pops up, spins and flies off to the side
+      const o = 1 - Math.pow(1 - ph.cap, 3);
+      pp.cap.position.set(o * 1.1, 1.53 + o * 1.6 + Math.sin(o * Math.PI) * 0.5, o * 0.6);
+      pp.cap.rotation.set(o * 1.2, o * 5, -o * 2.4);
+      pp.cap.scale.setScalar(1 - ss(o, 0.75, 1));
+      pp.cap.visible = o < 0.999;
+      // level drops while it pours; once tipped over, gravity pulls the
+      // liquid toward the neck, so the empty space opens at the base
+      const k = 1 - 0.34 * ph.drain;
+      const pivot = THREE.MathUtils.lerp(-1.74, 0.608, ss(ph.tilt, 0.25, 0.7));
+      pp.liquid.scale.y = k;
+      pp.liquid.position.y = pivot * (1 - k);
+      pp.bubbles.visible = k > 0.97 && ph.tilt < 0.05;
+      const flowing = pour.head - pour.tail > 0.002 && ph.tilt > 0.5;
+      pp.neck.visible = flowing;
+    }
+
+    // hand the mouth position + pour direction to the stream
+    pour.head = ph.head;
+    pour.tail = Math.min(ph.tail, ph.head);
+    if (pour.head - pour.tail > 0.002) {
+      g.updateMatrixWorld();
+      const top = 1.5 + BOTTLE.centerOffset;
+      g.localToWorld(mouthLocal.set(0, top, 0));
+      g.localToWorld(neckLocal.set(0, top + 0.4, 0));
+      pour.mouth.copy(mouthLocal);
+      pour.dir.copy(neckLocal).sub(mouthLocal).normalize();
+      pour.scale = g.scale.x;
+    }
 
     // ---- liquid follows flavour colour
     const liq = director.flavorLiquid;

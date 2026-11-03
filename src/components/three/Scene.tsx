@@ -9,6 +9,7 @@ import { Particles } from "./Particles";
 import { Wordmark3D } from "./Wordmark3D";
 import { LiveBottle } from "./LiveBottle";
 import { FlavorFruits } from "./FlavorFruits";
+import { PourStream } from "./PourStream";
 import { StudioEnvironment, StudioLights } from "./Lighting";
 import { updateDirector } from "./director";
 import { useLabels } from "./useLabels";
@@ -61,6 +62,7 @@ function Content({ mobile }: { mobile: boolean }) {
       {labels && (
         <>
           <LiveBottle labels={labels} quality={mobile ? "low" : "high"} />
+          <PourStream />
           <FlavorFruits maxPieces={mobile ? 4 : 6} spread={mobile ? 1 : 0.72} />
           <ReadySignal />
         </>
