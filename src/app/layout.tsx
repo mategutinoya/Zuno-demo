@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ZUNO — Drink Different.",
     description: "Hard Seltzer frutal. Una vuelta más de sabor.",
-    images: ["/experience/lineup.jpg"],
+    images: ["/experience/zuno-poster.jpg"],
     type: "website",
     locale: "es_BO",
   },
