@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "render:shots": "node scripts/render-shots.cjs"
+    "render:shots": "node scripts/render-shots.cjs",
+    "photos": "node scripts/generate-photos.cjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
