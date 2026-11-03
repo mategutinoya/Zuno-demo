@@ -75,11 +75,11 @@ export function Story() {
 
         <div className="mt-16 grid grid-cols-1 gap-12 md:mt-24 md:grid-cols-12 md:gap-8">
           <div className="relative md:col-span-5">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-blush">
+            <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-blush">
               <div data-story-img className="absolute inset-[-12%]">
                 <Image
-                  src="/experience/story.jpg"
-                  alt="Botella ZUNO Pink Lychee en un estudio rosa con lychees"
+                  src="/experience/photo-story.jpg"
+                  alt="Botellas ZUNO Mango Passion y Achachairú Citrus con fruta fresca y salpicaduras"
                   fill
                   sizes="(max-width: 768px) 100vw, 40vw"
                   className="object-cover"
