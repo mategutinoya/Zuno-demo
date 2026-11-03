@@ -121,8 +121,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div aria-hidden className="pointer-events-none select-none">
-        <ZunoLogo className="mx-auto -mb-[4vw] w-[96vw] text-cream/[0.05]" crown={false} />
+      <div aria-hidden className="pointer-events-none select-none opacity-[0.06]">
+        <ZunoLogo className="mx-auto -mb-[4vw] w-[96vw] text-cream" crown={false} />
       </div>
     </footer>
   );

@@ -76,7 +76,7 @@ export function Flavors() {
         ["--fallback-bg" as string]: `linear-gradient(180deg, ${flavor.bg[1]}, ${flavor.bg[0]})`,
       }}
       aria-labelledby="flavors-title"
-      className={`relative z-10 overflow-hidden py-24 transition-colors duration-1000 ease-(--ease-premium) md:min-h-[100svh] md:py-28 ${
+      className={`relative z-10 flex items-center overflow-hidden py-24 transition-colors duration-1000 ease-(--ease-premium) md:min-h-[100svh] md:pt-28 md:pb-12 ${
         dark ? "text-ink" : "text-cream"
       }`}
     >
@@ -95,9 +95,9 @@ export function Flavors() {
         </AnimatePresence>
       </div>
 
-      <div className="container-x relative">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
+      <div className="container-x relative grid grid-cols-1 gap-8 md:grid-cols-12 md:grid-rows-[auto_1fr] md:gap-x-6 md:gap-y-10">
+        {/* heading */}
+        <div className="md:col-span-4 md:col-start-1 md:row-start-1">
             <div className="flex items-center gap-4">
               <span className="eyebrow" style={{ color: dark ? "#17131B" : flavor.accent }}>
                 03
@@ -105,7 +105,7 @@ export function Flavors() {
               <span data-reveal="line" className={`h-px w-16 ${dark ? "bg-ink/30" : "bg-cream/30"}`} />
               <span className="eyebrow">Flavors</span>
             </div>
-            <h2 id="flavors-title" className="display mt-6 text-5xl md:text-7xl">
+            <h2 id="flavors-title" className="display mt-6 text-5xl md:text-[3.6vw] xl:text-6xl">
               <span className="block overflow-hidden">
                 <span data-reveal="mask" className="block">
                   Cuatro sabores.
@@ -117,20 +117,18 @@ export function Flavors() {
                 </span>
               </span>
             </h2>
-          </div>
-          <p className={`max-w-xs text-sm leading-relaxed ${muted}`}>
-            Elige un sabor y deja que la botella cambie de mundo. Usa las flechas o desliza en móvil.
-          </p>
         </div>
+        <p className={`max-w-xs self-end text-sm leading-relaxed md:col-span-4 md:col-start-9 md:row-start-1 md:pl-8 ${muted}`}>
+          Elige un sabor y deja que la botella cambie de mundo. Usa las flechas o desliza en móvil.
+        </p>
 
-        <div className="mt-10 grid grid-cols-1 items-center gap-8 md:mt-4 md:grid-cols-12 md:gap-6">
           {/* details */}
           <div
             id="flavor-panel"
             role="tabpanel"
             aria-labelledby={`tab-${flavor.id}`}
             aria-live="polite"
-            className="order-3 md:order-1 md:col-span-4"
+            className="order-last md:order-none md:col-span-4 md:col-start-1 md:row-start-2 md:self-center"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div key={flavor.id} initial="in" animate="show" exit="out">
@@ -177,12 +175,12 @@ export function Flavors() {
           </div>
 
           {/* bottle stage */}
-          <div className="relative order-1 flex justify-center md:order-2 md:col-span-4">
-            <SceneAnchor id="flavors" rotY={0} rotZ={0} className="aspect-[1/3.44] h-[50svh] md:h-[68vh]" />
+          <div className="relative flex justify-center md:col-span-4 md:col-start-5 md:row-span-2 md:row-start-1 md:items-center">
+            <SceneAnchor id="flavors" rotY={0} rotZ={0} className="aspect-[1/3.44] h-[50svh] md:h-[min(76vh,860px)]" />
           </div>
 
           {/* selector */}
-          <div className="order-2 md:order-3 md:col-span-4 md:pl-8">
+          <div className="md:col-span-4 md:col-start-9 md:row-start-2 md:self-center md:pl-8">
             <div role="tablist" aria-label="Sabores ZUNO" aria-orientation="vertical" onKeyDown={onKey} className="flex gap-2 overflow-x-auto pb-2 md:flex-col md:gap-0 md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden">
               {FLAVORS.map((f, i) => {
                 const on = i === index;
@@ -234,7 +232,6 @@ export function Flavors() {
               </span>
             </div>
           </div>
-        </div>
       </div>
     </section>
   );

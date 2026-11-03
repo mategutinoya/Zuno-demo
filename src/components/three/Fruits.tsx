@@ -146,10 +146,12 @@ interface ClusterProps {
   presence: () => number;
   maxPieces?: number;
   animated?: boolean;
+  /** horizontal spread multiplier */
+  spread?: number;
 }
 
 /** Floating fruit arrangement with enter / exit choreography */
-export function FruitCluster({ flavorId, presence, maxPieces = 6, animated = true }: ClusterProps) {
+export function FruitCluster({ flavorId, presence, maxPieces = 6, animated = true, spread = 1 }: ClusterProps) {
   const layout = FRUIT_LAYOUTS[flavorId].slice(0, maxPieces);
   const refs = useRef<(THREE.Group | null)[]>([]);
   const phases = useMemo(() => layout.map((_, i) => i * 1.7 + 0.4), [layout]);
@@ -167,7 +169,7 @@ export function FruitCluster({ flavorId, presence, maxPieces = 6, animated = tru
       const local = THREE.MathUtils.clamp(p * 1.6 - i * 0.1, 0, 1);
       const e = 1 - Math.pow(1 - local, 3);
       const [x, y, z] = item.pos;
-      const out = 1 + (1 - e) * 0.9;
+      const out = (1 + (1 - e) * 0.9) * spread;
       g.position.set(x * out, y + Math.sin(t * 0.9 + phases[i]) * 0.07 + (1 - e) * -0.6, z);
       const [rx, ry, rz] = item.rot ?? [0, 0, 0];
       g.rotation.set(rx + Math.sin(t * 0.5 + phases[i]) * 0.15, ry + t * 0.25 + (1 - e) * 2.5, rz);

@@ -79,7 +79,7 @@ export const SHOTS: Record<string, Shot> = {
   },
   "ice-cold": {
     size: [1800, 1500],
-    camera: { pos: [0.25, 0.75, 4.6], look: [0, 0.35, 0], fov: 30 },
+    camera: { pos: [0.3, 0.15, 5.6], look: [0, -0.05, 0], fov: 30 },
     backdrop: { top: "#140C1C", mid: "#2D1840", bottom: "#4A2466", glow: "#8054A8" },
     bottles: [{ flavor: 3, pos: [0, 0, 0], rot: [0.05, -0.15, -0.08] }],
     fruits: [
@@ -241,11 +241,11 @@ function Palms() {
     <>
       <mesh position={[-5.6, 1.4, -5]} rotation-z={0.05}>
         <planeGeometry args={[5, 10]} />
-        <meshBasicMaterial map={left} transparent opacity={0.8} alphaTest={0.02} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial map={left} transparent opacity={0.8} alphaTest={0.12} depthWrite={false} toneMapped={false} />
       </mesh>
       <mesh position={[6.2, 0.8, -5.5]} scale={[-1, 1, 1]}>
         <planeGeometry args={[5, 10]} />
-        <meshBasicMaterial map={right} transparent opacity={0.65} alphaTest={0.02} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial map={right} transparent opacity={0.65} alphaTest={0.12} depthWrite={false} toneMapped={false} />
       </mesh>
     </>
   );

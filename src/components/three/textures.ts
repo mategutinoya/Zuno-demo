@@ -82,8 +82,8 @@ function drawLogo(
     ctx.lineWidth = 0.9;
     const r = rng(i * 31 + 5);
     const len = stroke.pts.length;
-    for (let b = 0; b < 7; b++) {
-      const frac = -0.85 + (b / 6) * 1.7;
+    for (let b = 0; b < 4; b++) {
+      const frac = -0.8 + (b / 3) * 1.6;
       const from = Math.floor(len * (0.62 + r() * 0.25));
       ctx.beginPath();
       let drawing = false;
@@ -98,7 +98,7 @@ function drawLogo(
           drawing = true;
         } else drawing = false;
       }
-      ctx.globalAlpha = 0.2 + r() * 0.35;
+      ctx.globalAlpha = 0.15 + r() * 0.25;
       ctx.stroke();
     }
     ctx.globalAlpha = 1;

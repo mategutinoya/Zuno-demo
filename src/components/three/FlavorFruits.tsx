@@ -10,7 +10,7 @@ import { flavorStore } from "@/lib/store";
 import { sceneState } from "@/lib/sceneState";
 
 /** Fruit universes that orbit the bottle in the Flavors section. */
-export function FlavorFruits({ maxPieces }: { maxPieces: number }) {
+export function FlavorFruits({ maxPieces, spread = 1 }: { maxPieces: number; spread?: number }) {
   const group = useRef<THREE.Group>(null);
   const presence = useRef(FLAVORS.map(() => 0));
   const changedAt = useRef(-10);
@@ -49,6 +49,7 @@ export function FlavorFruits({ maxPieces }: { maxPieces: number }) {
           flavorId={f.id}
           presence={() => presence.current[i]}
           maxPieces={maxPieces}
+          spread={spread}
           animated={!sceneState.reducedMotion}
         />
       ))}

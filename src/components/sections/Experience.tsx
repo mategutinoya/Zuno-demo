@@ -91,7 +91,7 @@ export function Experience() {
       <div data-pin className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden py-24 md:py-0">
         <div
           ref={track}
-          className="flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto px-5 [scrollbar-width:none] md:w-max md:snap-none md:gap-8 md:overflow-visible md:px-[clamp(1.25rem,4vw,3.5rem)] [&::-webkit-scrollbar]:hidden"
+          className="flex snap-x snap-mandatory items-stretch scroll-px-5 gap-5 overflow-x-auto px-5 [scrollbar-width:none] md:w-max md:snap-none md:gap-8 md:overflow-visible md:px-[clamp(1.25rem,4vw,3.5rem)] [&::-webkit-scrollbar]:hidden"
         >
           {/* intro panel */}
           <div className="flex w-[85vw] shrink-0 snap-start flex-col justify-center md:w-[34vw] md:pr-8">

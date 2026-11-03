@@ -61,7 +61,7 @@ function Content({ mobile }: { mobile: boolean }) {
       {labels && (
         <>
           <LiveBottle labels={labels} quality={mobile ? "low" : "high"} />
-          <FlavorFruits maxPieces={mobile ? 4 : 6} />
+          <FlavorFruits maxPieces={mobile ? 4 : 6} spread={mobile ? 1 : 0.72} />
           <ReadySignal />
         </>
       )}
