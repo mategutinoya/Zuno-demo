@@ -78,8 +78,9 @@ export interface BottleMaterials {
   glass: THREE.MeshPhysicalMaterial;
   liquid: THREE.MeshPhysicalMaterial;
   label: THREE.MeshPhysicalMaterial;
-  cap: THREE.MeshStandardMaterial;
-  capTop: THREE.MeshStandardMaterial;
+  cap: THREE.MeshPhysicalMaterial;
+  capTop: THREE.MeshPhysicalMaterial;
+  capUnder: THREE.MeshStandardMaterial;
   drop: THREE.MeshPhysicalMaterial;
   bubble: THREE.MeshStandardMaterial;
 }
@@ -160,8 +161,25 @@ export function createBottleMaterials(
       clearcoatNormalScale: new THREE.Vector2(0.9, 0.9),
       envMapIntensity: 0.6,
     }),
-    cap: new THREE.MeshStandardMaterial({ color: "#121015", metalness: 0.9, roughness: 0.28, envMapIntensity: 1.4 }),
-    capTop: new THREE.MeshStandardMaterial({ map: capTop, metalness: 0.75, roughness: 0.32 }),
+    // black lacquered steel crown: glossy clear coat over metal, crisp studio reflections
+    cap: new THREE.MeshPhysicalMaterial({
+      color: "#26222b",
+      metalness: 1,
+      roughness: 0.22,
+      clearcoat: 1,
+      clearcoatRoughness: 0.02,
+      specularIntensity: 1,
+      envMapIntensity: 2.6,
+    }),
+    capUnder: new THREE.MeshStandardMaterial({ color: "#0d0b0f", roughness: 0.7, envMapIntensity: 0.2 }),
+    capTop: new THREE.MeshPhysicalMaterial({
+      map: capTop,
+      metalness: 0.85,
+      roughness: 0.2,
+      clearcoat: 1,
+      clearcoatRoughness: 0.02,
+      envMapIntensity: 2.4,
+    }),
     drop: new THREE.MeshPhysicalMaterial({
       color: "#ffffff",
       ...(low ? { transparent: true, opacity: 0.55, depthWrite: false } : { transmission: 1 }),
@@ -348,7 +366,7 @@ export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
         <mesh geometry={geo.glass} material={materials.glass} renderOrder={2} />
         <mesh geometry={labelGeo} material={materials.label} position-y={LABEL.centerY} />
         <instancedMesh ref={dropsRef} args={[dropGeo, materials.drop, dropCount]} frustumCulled={false} />
-        <mesh name="cap" geometry={geo.cap} position-y={1.53} material={[materials.cap, materials.capTop, materials.cap]} />
+        <mesh name="cap" geometry={geo.cap} position-y={1.53} material={[materials.cap, materials.capTop, materials.capUnder]} />
       </group>
     </group>
   );
