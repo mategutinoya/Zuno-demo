@@ -9,7 +9,7 @@ const vertex = /* glsl */ `
 `;
 const fragment = /* glsl */ `
   uniform vec3 uTop; uniform vec3 uMid; uniform vec3 uBottom; uniform vec3 uGlow;
-  uniform vec2 uSun; uniform float uSunR; uniform vec3 uSunColor; uniform float uAspect;
+  uniform vec2 uSun; uniform float uSunR; uniform vec3 uSunColor; uniform float uAspect; uniform float uStars;
   varying vec2 vUv;
   float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   void main() {
@@ -22,6 +22,11 @@ const fragment = /* glsl */ `
       float d = length(p - sp);
       col = mix(col, uSunColor, smoothstep(uSunR, uSunR * 0.92, d));
       col += uSunColor * 0.35 * smoothstep(uSunR * 4.0, uSunR, d);
+    }
+    if (uStars > 0.0) {
+      vec2 cell = floor(uv * vec2(uAspect, 1.0) * 220.0);
+      float st = step(0.996, hash(cell)) * hash(cell + 3.1);
+      col += vec3(st) * uStars * smoothstep(0.35, 0.9, uv.y);
     }
     col *= mix(0.78, 1.0, smoothstep(1.1, 0.25, length(p)));
     col += (hash(uv * 1200.0) - 0.5) * 0.02;
@@ -37,11 +42,12 @@ export interface BackdropProps {
   bottom: string;
   glow: string;
   sun?: { x: number; y: number; r: number; color: string };
+  stars?: number;
   z?: number;
 }
 
 /** Gradient backdrop sized exactly to the camera frustum so UVs map to the frame. */
-export function Backdrop({ top, mid, bottom, glow, sun, z = -8 }: BackdropProps) {
+export function Backdrop({ top, mid, bottom, glow, sun, stars = 0, z = -8 }: BackdropProps) {
   const { camera, size } = useThree();
   const cam = camera as THREE.PerspectiveCamera;
   const d = cam.position.z - z;
@@ -57,8 +63,9 @@ export function Backdrop({ top, mid, bottom, glow, sun, z = -8 }: BackdropProps)
       uSunR: { value: sun?.r ?? 0 },
       uSunColor: { value: new THREE.Color(sun?.color ?? "#fff") },
       uAspect: { value: width / height },
+      uStars: { value: stars },
     }),
-    [top, mid, bottom, glow, sun, width, height],
+    [top, mid, bottom, glow, sun, stars, width, height],
   );
   return (
     <mesh position={[cam.position.x, cam.position.y, z]} scale={[width, height, 1]}>

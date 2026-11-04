@@ -5,10 +5,10 @@ const { mkdir, writeFile } = require("node:fs/promises");
 
 const BASE = process.env.STUDIO_URL ?? "http://localhost:3000";
 const SHOTS = {
-  "moment-fresh-cut": [700, 1608],
-  "moment-golden-hour": [700, 1608],
-  "moment-bright-side": [700, 1608],
-  "moment-night-mood": [700, 1608],
+  "moment-fresh-cut": [900, 1200],
+  "moment-golden-hour": [900, 1200],
+  "moment-bright-side": [900, 1200],
+  "moment-night-mood": [900, 1200],
   "golden-hour": [1800, 1500],
   "fresh-cut": [1800, 1500],
   "ice-cold": [1800, 1500],

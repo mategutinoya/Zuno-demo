@@ -99,3 +99,48 @@ export function createMarbleTexture(seed = 4) {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
+
+/** Warm, oiled wood planks for outdoor table tops. */
+export function createWoodTexture(seed = 6) {
+  const S = 1024;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const ctx = c.getContext("2d")!;
+  const r = rng(seed);
+  const planks = 5;
+  for (let p = 0; p < planks; p++) {
+    const y0 = (p / planks) * S;
+    const h = S / planks;
+    const base = 0.85 + r() * 0.25;
+    const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
+    g.addColorStop(0, `rgb(${150 * base},${98 * base},${60 * base})`);
+    g.addColorStop(1, `rgb(${128 * base},${80 * base},${48 * base})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, y0, S, h);
+    // grain
+    for (let i = 0; i < 70; i++) {
+      const yy = y0 + r() * h;
+      const amp = 2 + r() * 6;
+      const freq = 0.004 + r() * 0.01;
+      const ph = r() * 10;
+      ctx.strokeStyle = `rgba(${60 + r() * 40},${35 + r() * 25},${20},${0.08 + r() * 0.18})`;
+      ctx.lineWidth = 0.6 + r() * 1.8;
+      ctx.beginPath();
+      for (let x = 0; x <= S; x += 16) {
+        const y = yy + Math.sin(x * freq + ph) * amp;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    // seam
+    ctx.fillStyle = "rgba(40,22,12,0.55)";
+    ctx.fillRect(0, y0, S, 3);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(2, 2);
+  t.anisotropy = 8;
+  return t;
+}

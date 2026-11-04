@@ -8,7 +8,8 @@ import { Fruit, type FruitPiece } from "../Fruits";
 import { StudioEnvironment } from "../Lighting";
 import { loadLabels } from "../useLabels";
 import { Backdrop, type BackdropProps } from "./Backdrop";
-import { createMarbleTexture, createPalmTexture } from "./props";
+import { createMarbleTexture, createPalmTexture, createWoodTexture } from "./props";
+import { rng } from "../textures";
 import { FLAVORS } from "@/lib/flavors";
 
 type V3 = [number, number, number];
@@ -31,7 +32,7 @@ interface Shot {
   backdrop: BackdropProps;
   bottles: BottleSpec[];
   fruits: FruitSpec[];
-  floor?: "reflector" | "marble" | "gloss";
+  floor?: "reflector" | "marble" | "gloss" | "wood";
   floorColor?: string;
   floorY?: number;
   palms?: boolean;
@@ -40,76 +41,104 @@ interface Shot {
 
 const FLOOR = -1.72;
 
-const P: [number, number] = [700, 1608];
+/** A natural-looking heap of fruit on the table: a bottom ring plus a few on top. */
+function pile(kind: FruitPiece, cx: number, cz: number, count: number, r: number, size: number, seed: number): FruitSpec[] {
+  const rand = rng(seed);
+  const out: FruitSpec[] = [];
+  for (let i = 0; i < count; i++) {
+    const top = i >= Math.ceil(count * 0.7);
+    const a = rand() * Math.PI * 2;
+    const d = (top ? 0.35 : 0.6 + rand() * 0.4) * r;
+    out.push({
+      kind,
+      pos: [cx + Math.cos(a) * d, FLOOR + size * (top ? 2.3 : 1), cz + Math.sin(a) * d],
+      rot: [rand() * 0.6, rand() * Math.PI * 2, rand() * 0.6],
+      scale: 0.85 + rand() * 0.3,
+    });
+  }
+  return out;
+}
+
+const P: [number, number] = [900, 1200];
 
 export const SHOTS: Record<string, Shot> = {
   "moment-fresh-cut": {
     size: P,
-    camera: { pos: [0, -0.05, 9.6], look: [0, -0.2, 0], fov: 30 },
-    backdrop: { top: "#FBD9E6", mid: "#F49CC2", bottom: "#E2558F", glow: "#FFE6F0" },
-    bottles: [{ flavor: 0, pos: [0, 0, 0], rot: [0, -0.3, 0] }],
+    camera: { pos: [0, 0.55, 10.2], look: [0, -0.35, 0], fov: 30 },
+    backdrop: { top: "#F3D6E1", mid: "#E7B6C8", bottom: "#C08DA2", glow: "#FFEAF2" },
+    bottles: [{ flavor: 0, pos: [0.35, 0, 0], rot: [0, -0.3, 0] }],
     fruits: [
-      { kind: "lychee", pos: [-0.62, FLOOR + 0.26, 0.95], scale: 1 },
-      { kind: "lycheePeeled", pos: [0.42, FLOOR + 0.24, 1.35], scale: 0.95 },
-      { kind: "raspberry", pos: [0.82, FLOOR + 0.21, 0.55], rot: [0.3, 0, 0.4], scale: 0.95 },
-      { kind: "raspberry", pos: [-0.2, FLOOR + 0.2, 1.75], rot: [-0.4, 0.3, 0.2], scale: 0.8 },
-      { kind: "leaf", pos: [-0.95, FLOOR + 0.03, 1.4], rot: [-1.45, 0, 0.7], scale: 1.2 },
-      { kind: "raspberry", pos: [0.72, 1.05, -0.4], rot: [0.6, 0.2, 0], scale: 0.75 },
-      { kind: "lychee", pos: [-0.72, 0.55, -0.5], scale: 0.75 },
+      ...pile("lychee", -1.05, 0.55, 10, 0.75, 0.24, 11),
+      { kind: "lycheePeeled", pos: [-0.25, FLOOR + 0.22, 1.55], scale: 0.95 },
+      { kind: "lycheePeeled", pos: [1.25, FLOOR + 0.22, 1.2], scale: 0.85 },
+      { kind: "raspberry", pos: [0.55, FLOOR + 0.22, 1.55], rot: [0.2, 0, 0.3], scale: 0.9 },
+      { kind: "raspberry", pos: [1.45, FLOOR + 0.22, 0.4], rot: [-0.3, 0.4, 0.1], scale: 0.85 },
+      { kind: "leaf", pos: [-0.55, FLOOR + 0.03, 1.75], rot: [-1.45, 0, 0.6], scale: 1.2 },
+      { kind: "leaf", pos: [1.0, FLOOR + 0.03, 1.75], rot: [-1.45, 0, -0.9], scale: 1.0 },
     ],
-    floor: "gloss",
-    floorColor: "#F0A6C6",
+    floor: "wood",
     lights: "pink",
   },
   "moment-golden-hour": {
     size: P,
-    camera: { pos: [0.15, 0.15, 9.8], look: [0.05, -0.15, 0], fov: 30 },
-    backdrop: { top: "#3B1F5C", mid: "#E85A8E", bottom: "#FFA24C", glow: "#FFC58A", sun: { x: 0.72, y: 0.6, r: 0.11, color: "#FFE7B0" } },
-    bottles: [{ flavor: 1, pos: [0, 0, 0], rot: [0, -0.35, 0] }],
+    camera: { pos: [0.1, 0.5, 10.2], look: [0, -0.35, 0], fov: 30 },
+    backdrop: { top: "#3B1F5C", mid: "#E2607F", bottom: "#FFAA55", glow: "#FFC58A", sun: { x: 0.25, y: 0.42, r: 0.09, color: "#FFE2A0" } },
+    bottles: [{ flavor: 1, pos: [0.05, 0, 0], rot: [0, -0.35, 0] }],
     fruits: [
-      { kind: "passionHalf", pos: [0.62, FLOOR + 0.28, 1.05], rot: [0.95, 0, 0.2], scale: 0.95 },
-      { kind: "mango", pos: [-0.72, FLOOR + 0.24, 0.55], rot: [0, 0.5, 0], scale: 0.95 },
-      { kind: "mangoCube", pos: [-0.25, FLOOR + 0.1, 1.55], rot: [0, 0.6, 0], scale: 1 },
-      { kind: "ice", pos: [0.15, FLOOR + 0.2, 1.9], rot: [0, 0.4, 0.05], scale: 0.8 },
-      { kind: "leaf", pos: [-0.95, FLOOR + 0.03, 1.35], rot: [-1.45, 0, 0.5], scale: 1.1 },
+      { kind: "passionHalf", pos: [-0.95, FLOOR + 0.28, 1.15], rot: [0.95, 0, 0.25], scale: 1 },
+      { kind: "passionHalf", pos: [-1.45, FLOOR + 0.28, 0.45], rot: [0.85, 0.4, -0.2], scale: 0.9 },
+      { kind: "mango", pos: [1.3, FLOOR + 0.24, 0.6], rot: [0, -0.5, 0], scale: 1 },
+      { kind: "mangoCube", pos: [0.75, FLOOR + 0.1, 1.45], rot: [0, 0.6, 0], scale: 1 },
+      { kind: "mangoCube", pos: [1.05, FLOOR + 0.1, 1.75], rot: [0, 0.2, 0], scale: 0.9 },
+      { kind: "mangoCube", pos: [0.45, FLOOR + 0.1, 1.85], rot: [0, 1.0, 0], scale: 0.85 },
+      { kind: "ice", pos: [-0.25, FLOOR + 0.2, 1.75], rot: [0, 0.4, 0.05], scale: 0.8 },
+      { kind: "leaf", pos: [1.55, FLOOR + 0.03, 1.3], rot: [-1.45, 0, -0.5], scale: 1.2 },
     ],
-    floor: "reflector",
-    floorColor: "#4a2232",
+    floor: "wood",
     palms: true,
     lights: "warm",
   },
   "moment-bright-side": {
     size: P,
-    camera: { pos: [0, -0.05, 9.6], look: [0, -0.2, 0], fov: 30 },
-    backdrop: { top: "#FFF8DA", mid: "#EEF4A2", bottom: "#BCD552", glow: "#FFFFFF" },
-    bottles: [{ flavor: 2, pos: [0, 0, 0], rot: [0, -0.3, 0] }],
+    camera: { pos: [0, 0.55, 10.2], look: [0, -0.35, 0], fov: 30 },
+    backdrop: { top: "#9ED2EF", mid: "#E2F2F9", bottom: "#F5ECDC", glow: "#FFFFFF" },
+    bottles: [{ flavor: 2, pos: [0.1, 0, 0], rot: [0, -0.3, 0] }],
     fruits: [
-      { kind: "achachairuHalf", pos: [-0.62, FLOOR + 0.24, 1.0], rot: [0.95, 0, -0.25], scale: 1 },
-      { kind: "limeSlice", pos: [0.62, FLOOR + 0.18, 1.1], rot: [1.15, 0.2, -0.25], scale: 0.9 },
-      { kind: "achachairu", pos: [0.85, FLOOR + 0.25, 0.3], rot: [0.2, 0, 0.3], scale: 0.95 },
-      { kind: "ice", pos: [-0.05, FLOOR + 0.2, 1.75], rot: [0, -0.3, 0.04], scale: 0.85 },
-      { kind: "lime", pos: [-0.85, FLOOR + 0.25, 0.1], scale: 0.85 },
-      { kind: "leaf", pos: [0.95, FLOOR + 0.03, 1.55], rot: [-1.45, 0, -0.8], scale: 1.1 },
+      ...pile("lime", 1.2, 0.5, 6, 0.6, 0.25, 21),
+      { kind: "achachairuHalf", pos: [-0.85, FLOOR + 0.24, 1.25], rot: [0.95, 0, -0.25], scale: 1 },
+      { kind: "achachairu", pos: [-1.35, FLOOR + 0.25, 0.55], rot: [0.2, 0, 0.3], scale: 1 },
+      { kind: "achachairu", pos: [-1.05, FLOOR + 0.25, 0.05], rot: [0.1, 1.2, -0.2], scale: 0.9 },
+      { kind: "limeSlice", pos: [0.65, FLOOR + 0.18, 1.55], rot: [1.15, 0.2, -0.25], scale: 0.9 },
+      { kind: "ice", pos: [-0.1, FLOOR + 0.2, 1.8], rot: [0, -0.3, 0.04], scale: 0.85 },
+      { kind: "ice", pos: [0.3, FLOOR + 0.2, 2.2], rot: [0, 0.6, 0.02], scale: 0.7 },
+      { kind: "leaf", pos: [-1.5, FLOOR + 0.03, 1.5], rot: [-1.45, 0, 0.8], scale: 1.1 },
     ],
     floor: "gloss",
-    floorColor: "#D7E47E",
+    floorColor: "#E8E0D2",
     lights: "studio",
   },
   "moment-night-mood": {
     size: P,
-    camera: { pos: [0.1, 0.1, 9.2], look: [0, -0.1, 0], fov: 30 },
-    backdrop: { top: "#120A1A", mid: "#2D1840", bottom: "#4A2466", glow: "#8054A8" },
+    camera: { pos: [0.1, 0.5, 10.2], look: [0, -0.35, 0], fov: 30 },
+    backdrop: {
+      top: "#060A1C",
+      mid: "#1A1640",
+      bottom: "#3A2357",
+      glow: "#5B3E8C",
+      sun: { x: 0.7, y: 0.64, r: 0.035, color: "#F3F0E4" },
+      stars: 0.9,
+    },
     bottles: [{ flavor: 3, pos: [0, 0, 0], rot: [0, -0.25, 0] }],
     fruits: [
-      { kind: "blackberry", pos: [-0.62, FLOOR + 0.25, 0.95], rot: [0.3, 0, 0.4], scale: 0.95 },
-      { kind: "blueberry", pos: [0.55, FLOOR + 0.14, 1.2], scale: 0.95 },
-      { kind: "blueberry", pos: [0.85, FLOOR + 0.14, 0.7], scale: 0.85 },
-      { kind: "ice", pos: [-0.1, FLOOR + 0.2, 1.75], rot: [0, 0.5, 0.05], scale: 0.85 },
-      { kind: "blackberry", pos: [0.7, 0.85, -0.4], rot: [0.5, 0, 0.2], scale: 0.75 },
-      { kind: "blueberry", pos: [-0.75, 0.4, -0.3], scale: 0.7 },
+      ...pile("blackberry", -1.1, 0.6, 8, 0.6, 0.25, 31),
+      ...pile("blueberry", 1.15, 0.7, 9, 0.55, 0.16, 37),
+      { kind: "blueberry", pos: [0.4, FLOOR + 0.14, 1.6], scale: 0.9 },
+      { kind: "blackberry", pos: [-0.35, FLOOR + 0.25, 1.65], rot: [0.3, 0, 0.4], scale: 0.9 },
+      { kind: "ice", pos: [0.95, FLOOR + 0.2, 1.75], rot: [0, 0.5, 0.05], scale: 0.8 },
+      { kind: "leaf", pos: [-1.5, FLOOR + 0.03, 1.5], rot: [-1.45, 0, 0.8], scale: 1.1 },
     ],
     floor: "reflector",
-    floorColor: "#1a0f24",
+    floorColor: "#140c1f",
     lights: "night",
   },
   "golden-hour": {
@@ -268,6 +297,12 @@ function Bottles({ shot, labels }: { shot: Shot; labels: THREE.Texture[] }) {
 
 function Floor({ shot }: { shot: Shot }) {
   const marble = useMemo(() => (shot.floor === "marble" ? createMarbleTexture() : null), [shot.floor]);
+  const wood = useMemo(() => {
+    if (shot.floor !== "wood") return null;
+    const t = createWoodTexture();
+    t.repeat.set(6, 3);
+    return t;
+  }, [shot.floor]);
   if (!shot.floor) return null;
   if (shot.floor === "marble") {
     return (
@@ -276,6 +311,14 @@ function Floor({ shot }: { shot: Shot }) {
         <meshPhysicalMaterial attach="material-0" color="#E6D8DF" roughness={0.3} clearcoat={1} />
         <meshPhysicalMaterial attach="material-1" map={marble} roughness={0.18} clearcoat={1} clearcoatRoughness={0.05} />
         <meshPhysicalMaterial attach="material-2" color="#E6D8DF" />
+      </mesh>
+    );
+  }
+  if (shot.floor === "wood") {
+    return (
+      <mesh rotation-x={-Math.PI / 2} position-y={FLOOR}>
+        <planeGeometry args={[40, 20]} />
+        <meshPhysicalMaterial map={wood} roughness={0.5} clearcoat={0.35} clearcoatRoughness={0.3} />
       </mesh>
     );
   }
