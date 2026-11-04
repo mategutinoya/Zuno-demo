@@ -27,6 +27,8 @@ export const pour = {
 const RINGS = 64;
 const SIDES = 14;
 const DROPS = 42;
+/** playback speed of the fall (1 = real time) */
+const SLOW = 0.5;
 
 /** Liquid pouring out of the bottle, following a real ballistic arc. */
 export function PourStream() {
@@ -94,7 +96,7 @@ export function PourStream() {
     const dt = Math.min(delta, 0.05);
 
     // ---- flow simulation (time-based, not scroll-locked)
-    pour.flow = THREE.MathUtils.damp(pour.flow, pour.want ? 1 : 0, pour.want ? 2.2 : 3.5, dt);
+    pour.flow = THREE.MathUtils.damp(pour.flow, pour.want ? 1 : 0, pour.want ? 1.4 : 2.2, dt);
     if (pour.want && !pour.active) {
       pour.active = true;
       pour.head = 0;
@@ -118,7 +120,8 @@ export function PourStream() {
     const tMax = (vy + Math.sqrt(Math.max(0, vy * vy + 2 * g * dy))) / g;
 
     // fractions advance on the fall's own clock, so the front accelerates like real liquid
-    const rate = dt / Math.max(tMax, 0.2);
+    // slow motion: same arc, half the speed
+    const rate = (dt * SLOW) / Math.max(tMax, 0.2);
     pour.head = Math.min(1, pour.head + rate);
     // when the bottle rights itself the stream breaks at the mouth and its last stretch keeps falling
     if (!pour.want && pour.flow < 0.35) pour.tail = Math.min(pour.head, pour.tail + rate);
@@ -151,11 +154,11 @@ export function PourStream() {
       tmp.n.crossVectors(tmp.t, tmp.z).normalize();
       tmp.b.crossVectors(tmp.n, tmp.t).normalize();
       // gentle wobble travelling down the stream
-      const wob = Math.sin(a * 38 - time * 14) * 0.012 * S * (0.3 + a);
+      const wob = Math.sin(a * 38 - time * 14 * SLOW) * 0.012 * S * (0.3 + a);
       tmp.p.addScaledVector(tmp.n, wob);
       // thins as it accelerates, rounded at both ends
       const ends = Math.min(1, f * 6, (1 - f) * 10 + 0.15);
-      const radius = r0 * (1 - 0.45 * a) * (0.92 + 0.08 * Math.sin(a * 70 - time * 20)) * Math.sqrt(Math.max(ends, 0.05));
+      const radius = r0 * (1 - 0.45 * a) * (0.92 + 0.08 * Math.sin(a * 70 - time * 20 * SLOW)) * Math.sqrt(Math.max(ends, 0.05));
       for (let s = 0; s < SIDES; s++) {
         const th = (s / SIDES) * Math.PI * 2;
         const c = Math.cos(th);
@@ -180,15 +183,15 @@ export function PourStream() {
 
     // droplets breaking away from the stream
     seeds.forEach((d, i) => {
-      const a = pour.tail + (pour.head - pour.tail) * ((d.a + time * d.speed * 0.25) % 1);
+      const a = pour.tail + (pour.head - pour.tail) * ((d.a + time * d.speed * 0.25 * SLOW) % 1);
       at(a, tmp.p);
       tangent(a, tmp.t);
       tmp.n.crossVectors(tmp.t, tmp.z).normalize();
       tmp.b.crossVectors(tmp.n, tmp.t).normalize();
       const spread = r0 * d.dist * (0.4 + a);
       tmp.p
-        .addScaledVector(tmp.n, Math.cos(d.ang + time) * spread)
-        .addScaledVector(tmp.b, Math.sin(d.ang + time) * spread);
+        .addScaledVector(tmp.n, Math.cos(d.ang + time * SLOW) * spread)
+        .addScaledVector(tmp.b, Math.sin(d.ang + time * SLOW) * spread);
       tmp.dummy.position.copy(tmp.p);
       tmp.dummy.scale.setScalar(r0 * d.size * (a > 0.05 ? 1 : 0));
       tmp.dummy.updateMatrix();

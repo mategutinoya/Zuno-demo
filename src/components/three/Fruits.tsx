@@ -34,12 +34,25 @@ function buildMaterials() {
     key: "lychee", pattern: "cells", scale: 11, bump: 0.9,
     low: [0.45, 0.24, 0.22], high: [1.12, 1.0, 0.98], rough: [1.15, 0.8],
   });
+  // pearly, juicy flesh: light passes through it
   const peeled = applySkin(
-    phys({ color: "#F4EEE6", roughness: 0.1, clearcoat: 1, transmission: 0.35, thickness: 0.4, ior: 1.36 }),
-    { key: "peeled", pattern: "fbm", scale: 4, bump: 0.18, low: [0.94, 0.94, 0.9], high: [1.04, 1.04, 1.04], rough: [0.7, 1.4] },
+    phys({
+      color: "#F7F1EC",
+      roughness: 0.08,
+      clearcoat: 1,
+      clearcoatRoughness: 0.03,
+      transmission: 0.62,
+      thickness: 0.9,
+      ior: 1.36,
+      attenuationColor: new THREE.Color("#f3e3e6"),
+      attenuationDistance: 0.6,
+      sheen: 0.6,
+      sheenColor: new THREE.Color("#ffffff"),
+    }),
+    { key: "peeled", pattern: "fbm", scale: 5, bump: 0.25, low: [0.9, 0.9, 0.88], high: [1.05, 1.04, 1.04], rough: [0.6, 1.6] },
   );
   const raspberry = applySkin(
-    phys({ color: "#C81C48", roughness: 0.34, clearcoat: 0.55, sheen: 0.8, sheenColor: new THREE.Color("#ff8fae") }),
+    phys({ color: "#C41A45", roughness: 0.4, clearcoat: 0.35, sheen: 1, sheenRoughness: 0.4, sheenColor: new THREE.Color("#ff9ab5"), side: THREE.DoubleSide }),
     { key: "raspberry", pattern: "fbm", scale: 30, bump: 0.25, low: [0.7, 0.75, 0.8], high: [1.1, 1.0, 1.0] },
   );
   const blackberry = applySkin(phys({ color: "#1E0B24", roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04 }), {
@@ -49,7 +62,7 @@ function buildMaterials() {
     // waxy "bloom": dusty light patches over deep blue
     key: "blueberry", pattern: "fbm", scale: 7, bump: 0.08, low: [0.7, 0.72, 0.85], high: [1.35, 1.38, 1.5], rough: [1.1, 0.85],
   });
-  const mango = applySkin(phys({ vertexColors: true, roughness: 0.48, clearcoat: 0.2 }), {
+  const mango = applySkin(phys({ vertexColors: true, roughness: 0.55, clearcoat: 0.08 }), {
     key: "mango", pattern: "fbm", scale: 4, bump: 0.08, low: [0.86, 0.84, 0.8], high: [1.06, 1.04, 1.0],
     speck: { color: [0.98, 0.9, 0.62], density: 0.06, scale: 90 },
   });
@@ -92,6 +105,9 @@ function buildMaterials() {
     achachairuFlesh: applySkin(phys({ map: fleshTex, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.04 }), {
       key: "achaFlesh", pattern: "fbm", scale: 22, bump: 0.22, low: [0.97, 0.97, 0.96], high: [1.02, 1.02, 1.02],
     }),
+    stem: applySkin(phys({ color: "#6B4A26", roughness: 0.85 }), {
+      key: "stem", pattern: "fbm", scale: 40, bump: 0.3, low: [0.7, 0.7, 0.6], high: [1.1, 1.05, 0.95],
+    }),
     leaf: phys({ map: getLeafTexture(), roughness: 0.42, clearcoat: 0.6, side: THREE.DoubleSide }),
     ice: applySkin(
       phys({ color: "#f4fbff", transmission: 1, thickness: 0.6, ior: 1.31, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.08 }),
@@ -109,7 +125,12 @@ export function Fruit({ kind }: { kind: FruitPiece }) {
   const m = getFruitMaterials();
   switch (kind) {
     case "lychee":
-      return <mesh geometry={g.lychee} material={m.lychee} />;
+      return (
+        <group>
+          <mesh geometry={g.lychee} material={m.lychee} />
+          <mesh geometry={g.stem} material={m.stem} position-y={0.255} />
+        </group>
+      );
     case "lycheePeeled":
       return <mesh geometry={g.lycheePeeled} material={m.peeled} />;
     case "raspberry":
@@ -124,11 +145,21 @@ export function Fruit({ kind }: { kind: FruitPiece }) {
         </group>
       );
     case "mango":
-      return <mesh geometry={g.mango} material={m.mango} />;
+      return (
+        <group>
+          <mesh geometry={g.mango} material={m.mango} />
+          <mesh geometry={g.stem} material={m.stem} position={[-0.3, 0.13, 0]} rotation-z={0.9} scale={0.8} />
+        </group>
+      );
     case "mangoCube":
       return <RoundedBox args={[0.2, 0.2, 0.2]} radius={0.045} smoothness={3} material={m.mangoFlesh} />;
     case "passion":
-      return <mesh geometry={g.passion} material={m.passion} />;
+      return (
+        <group>
+          <mesh geometry={g.passion} material={m.passion} />
+          <mesh geometry={g.stem} material={m.stem} position-y={0.28} scale={1.2} />
+        </group>
+      );
     case "passionHalf":
       return (
         <group>
@@ -142,7 +173,12 @@ export function Fruit({ kind }: { kind: FruitPiece }) {
     case "limeSlice":
       return <mesh geometry={g.limeSlice} material={[m.limeRind, m.limeFace, m.limeFace]} />;
     case "achachairu":
-      return <mesh geometry={g.achachairu} material={m.achachairu} />;
+      return (
+        <group>
+          <mesh geometry={g.achachairu} material={m.achachairu} />
+          <mesh geometry={g.stem} material={m.stem} position-y={0.25} scale={0.9} />
+        </group>
+      );
     case "ice":
       return <RoundedBox args={[0.42, 0.4, 0.42]} radius={0.07} smoothness={4} material={m.ice} />;
     case "leaf":

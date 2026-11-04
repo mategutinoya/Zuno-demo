@@ -21,44 +21,82 @@ function displacedSphere(radius: number, seg: number, fn: Fn, scale: [number, nu
   return g;
 }
 
-function drupeCluster(count: number, rx: number, ry: number, drupe: number, seed: number) {
+/** Drupelet cluster. `thimble` gives the raspberry's open, slightly conical shape. */
+function drupeCluster(count: number, rx: number, ry: number, drupe: number, seed: number, thimble = false) {
   const r = rng(seed);
   const parts: THREE.BufferGeometry[] = [];
   const golden = Math.PI * (3 - Math.sqrt(5));
+  const yMin = thimble ? -0.72 : -0.85;
   for (let i = 0; i < count; i++) {
     const t = i / (count - 1);
-    const y = 1 - t * 1.75; // leave the bottom open-ish
-    if (y < -0.85) continue;
-    const rad = Math.sqrt(Math.max(0, 1 - y * y));
+    const y = 1 - t * (1 - yMin);
+    let rad = Math.sqrt(Math.max(0, 1 - y * y));
+    // thimble: rounded tip, walls stay wide toward the open base
+    if (thimble) rad = THREE.MathUtils.lerp(rad, 0.9, THREE.MathUtils.smoothstep(-y, -0.2, 0.7)) * (0.82 + 0.18 * (1 - y) * 0.5);
     const th = golden * i;
-    const s = drupe * (0.85 + r() * 0.3) * (0.75 + rad * 0.35);
+    const s = drupe * (0.82 + r() * 0.36) * (0.75 + rad * 0.35);
     const g = new THREE.SphereGeometry(s, 10, 8);
+    g.scale(1, 1.12, 1);
     g.translate(Math.cos(th) * rad * rx, y * ry, Math.sin(th) * rad * rx);
     parts.push(g);
   }
-  const core = new THREE.SphereGeometry(rx * 0.92, 16, 12);
-  core.scale(1, ry / rx, 1);
-  parts.push(core);
+  if (thimble) {
+    // dark hollow seen from below
+    const hollow = new THREE.CylinderGeometry(rx * 0.55, rx * 0.7, ry * 0.5, 16, 1, true);
+    hollow.translate(0, yMin * ry + ry * 0.2, 0);
+    parts.push(hollow);
+    const core = new THREE.SphereGeometry(rx * 0.85, 16, 12);
+    core.scale(1, ry / rx, 1);
+    core.translate(0, ry * 0.12, 0);
+    parts.push(core);
+  } else {
+    const core = new THREE.SphereGeometry(rx * 0.92, 16, 12);
+    core.scale(1, ry / rx, 1);
+    parts.push(core);
+  }
+  // merged geometries must share attributes: drop uvs everywhere
+  parts.forEach((p) => p.deleteAttribute("uv"));
   return mergeGeometries(parts)!;
+}
+
+/** Short, slightly bent woody stem (base at origin, pointing +y). */
+function stem(length: number, radius: number) {
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(radius * 0.6, length * 0.5, 0),
+    new THREE.Vector3(radius * 2.2, length, radius * 0.5),
+  ]);
+  return new THREE.TubeGeometry(curve, 8, radius, 6, false);
 }
 
 let cache: ReturnType<typeof build> | null = null;
 
 function build() {
+  // slightly heart-shaped: broad shoulders, softly pointed base
   const lychee = displacedSphere(
     0.24,
     64,
-    (n) => 0.05 * Math.pow(Math.abs(Math.sin(n.x * 17) * Math.sin(n.y * 17) * Math.sin(n.z * 17)), 0.5),
-    [1, 1.08, 1],
+    (n) => -0.09 * Math.pow(Math.max(0, -n.y), 3) + 0.04 * Math.max(0, n.y) * (1 - Math.abs(n.x)),
+    [1, 1.1, 0.96],
   );
-  const lycheePeeled = displacedSphere(0.21, 40, (n) => 0.025 * Math.sin(n.y * 5 + n.x * 3), [1, 1.12, 1]);
-  const raspberry = drupeCluster(80, 0.19, 0.22, 0.052, 3);
+  const lycheePeeled = displacedSphere(
+    0.21,
+    48,
+    (n) => 0.03 * Math.sin(n.y * 5 + n.x * 3) - 0.07 * Math.pow(Math.max(0, -n.y), 3),
+    [1, 1.12, 0.97],
+  );
+  const raspberry = drupeCluster(90, 0.19, 0.24, 0.05, 3, true);
   const blackberry = drupeCluster(70, 0.18, 0.25, 0.056, 9);
   const blueberry = displacedSphere(0.16, 32, (n) => (n.y > 0.85 ? -0.12 * (n.y - 0.85) * 6 : 0), [1, 0.86, 1]);
   const blueberryCrown = new THREE.TorusGeometry(0.04, 0.014, 6, 12);
 
   // Mango: kidney-ish ellipsoid with vertex colour blush
-  const mango = displacedSphere(0.34, 48, (n) => 0.06 * n.x * n.y, [1, 0.72, 0.68]);
+  const mango = displacedSphere(
+    0.34,
+    56,
+    (n) => 0.07 * n.x * n.y + 0.08 * Math.pow(Math.max(0, n.x), 4) * Math.max(0, -n.y) * 2.2 - 0.03 * Math.max(0, -n.x),
+    [1, 0.74, 0.66],
+  );
   {
     const pos = mango.attributes.position as THREE.BufferAttribute;
     const col = new Float32Array(pos.count * 3);
@@ -98,6 +136,7 @@ function build() {
   );
 
   return {
+    stem: stem(0.1, 0.014),
     lychee,
     lycheePeeled,
     raspberry,

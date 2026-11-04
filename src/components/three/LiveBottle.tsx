@@ -177,7 +177,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
       // level drains with the actual flow and refills (rising smoothly) only
       // once the bottle is upright and capped; tipped over, gravity pulls the
       // liquid toward the neck, so the empty space opens at the base
-      if (pour.flow > 0.01) level.current = Math.max(0.5, level.current - dt * 0.15 * pour.flow);
+      if (pour.flow > 0.01) level.current = Math.max(0.5, level.current - dt * 0.085 * pour.flow);
       else if (ph.tilt < 0.02 && ph.cap < 0.02) level.current = damp(level.current, 1, 1.4, dt);
       const k = level.current;
       const pivot = THREE.MathUtils.lerp(-1.74, 0.608, ss(ph.tilt, 0.25, 0.7));
