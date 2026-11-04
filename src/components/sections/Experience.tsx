@@ -11,28 +11,28 @@ export const SHOTS = [
     title: "Fresh Cut",
     kicker: "Pink Lychee",
     text: "Lychee, frambuesa y una burbuja fina. Cada sabor empieza en la fruta.",
-    alt: "Botella ZUNO Pink Lychee en un jardín, junto a cestas de lychees frescos",
+    alt: "Botella ZUNO Pink Lychee con lychees, frambuesas y flores de cerezo sobre un fondo rosa",
   },
   {
     src: "/experience/photo-golden-hour.jpg",
     title: "Golden Hour",
     kicker: "Mango Passion",
     text: "Mango maduro y maracuyá. El atardecer tropical, servido bien frío.",
-    alt: "Botella ZUNO Mango Passion frente al mar al atardecer, con mango y maracuyá",
+    alt: "Botella ZUNO Mango Passion frente al mar al atardecer, con mango, maracuyá y hielo",
   },
   {
     src: "/experience/photo-bright-side.jpg",
     title: "Bright Side",
     kicker: "Achachairú Citrus",
     text: "Achachairú y lima: ácido, luminoso y con condensación en cada gota.",
-    alt: "Botella ZUNO Achachairú Citrus en una terraza luminosa, con limas, cítricos y hielo",
+    alt: "Botella ZUNO Achachairú Citrus con achachairús, limas, hielo y salpicaduras bajo el sol",
   },
   {
     src: "/experience/photo-night-mood.jpg",
     title: "Night Mood",
     kicker: "Berry Mood",
     text: "Mora y arándano para las noches que piden algo más intenso.",
-    alt: "Botella ZUNO Berry Mood de noche bajo la luna, con moras y arándanos",
+    alt: "Botella ZUNO Berry Mood de noche bajo la luna llena, con moras y arándanos",
   },
 ] as const;
 
@@ -86,7 +86,7 @@ export function Experience() {
             data-delay={i * 0.08}
             className="group relative w-[78vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-[1.5rem] bg-[#241a2c] md:w-auto md:max-w-none"
           >
-            <div className="relative aspect-[3/4] overflow-hidden">
+            <div className="relative aspect-[1122/1402] overflow-hidden">
               <Image
                 src={s.src}
                 alt={s.alt}
