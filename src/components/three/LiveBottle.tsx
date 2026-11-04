@@ -200,10 +200,12 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     // how far (in bottle units) the mouth sits below the liquid surface
     const head = (surfaceY - mouthLocal.y) / unit;
     const capOff = ph.cap > 0.6;
-    pour.want = !reduce && capOff && head > 0.015 && level.current > 0.22;
+    // hysteresis: starts once liquid covers the mouth, stops only when it clearly drops below
+    const covering = pour.want ? head > -0.03 : head > 0.03;
+    pour.want = !reduce && capOff && covering && level.current > 0.22;
     // once the stream breaks, its last stretch is free liquid: it keeps falling
     // from where it left the bottle instead of following the mouth
-    if (pour.want) {
+    if (pour.want && !pour.detached) {
       pour.mouth.copy(mouthLocal);
       pour.dir.copy(neckLocal).sub(mouthLocal).normalize();
       pour.scale = unit;

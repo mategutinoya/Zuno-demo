@@ -18,6 +18,8 @@ export const pour = {
   head: 0,
   tail: 0,
   active: false,
+  /** the stream has broken off the mouth: its last stretch is falling freely */
+  detached: false,
   mouth: new THREE.Vector3(),
   dir: new THREE.Vector3(0, -1, 0),
   /** bottle scale (world units per bottle unit) */
@@ -99,6 +101,7 @@ export function PourStream() {
     pour.flow = THREE.MathUtils.damp(pour.flow, pour.want ? 1 : 0, pour.want ? 3 : 2.2, dt);
     if (pour.want && !pour.active) {
       pour.active = true;
+      pour.detached = false;
       pour.head = 0;
       pour.tail = 0;
     }
@@ -119,14 +122,25 @@ export function PourStream() {
     const dy = pour.mouth.y - bottom;
     const tMax = (vy + Math.sqrt(Math.max(0, vy * vy + 2 * g * dy))) / g;
 
-    // fractions advance on the fall's own clock, so the front accelerates like real liquid
-    // slow motion: same arc, half the speed
+    // fractions advance on the fall's own clock (slow motion), so the front accelerates like real liquid
     const rate = (dt * SLOW) / Math.max(tMax, 0.2);
     pour.head = Math.min(1, pour.head + rate);
-    // when the bottle rights itself the stream breaks at the mouth and its last stretch keeps falling
-    if (!pour.want && pour.flow < 0.35) pour.tail = Math.min(pour.head, pour.tail + rate);
-    if (!pour.want && pour.tail >= pour.head - 0.001) {
+    // the stream breaks at the mouth once the flow dies down
+    if (!pour.want && pour.flow < 0.35) pour.detached = true;
+    if (pour.detached) {
+      if (pour.want && pour.tail < 0.12) {
+        // only a brief gap: fresh liquid reconnects it to the mouth
+        pour.detached = false;
+        pour.tail = 0;
+      } else {
+        // free liquid: its top falls away, a bit faster than the stream front
+        pour.tail = Math.min(pour.head, pour.tail + rate * 2);
+      }
+    }
+    if (pour.detached && pour.tail >= pour.head - 0.001) {
+      // finished falling; a new stream starts from the mouth next frame if still pouring
       pour.active = false;
+      pour.detached = false;
       pour.head = pour.tail = 0;
       m.visible = dm.visible = false;
       return;
