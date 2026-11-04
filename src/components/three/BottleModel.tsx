@@ -1,6 +1,6 @@
 "use client";
 import * as THREE from "three";
-import { forwardRef, useMemo, useRef } from "react";
+import { forwardRef, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { getBottleGeometry } from "./bottleGeometry";
 import { BOTTLE, LABEL } from "./dimensions";
@@ -20,19 +20,32 @@ const FRESNEL = /* glsl */ `
 
 /** Liquid reads as a lit, translucent volume: glowing core, dense rim, lighter toward the top. */
 function patchLiquid(m: THREE.MeshPhysicalMaterial, seeThrough = false) {
+  // world-space height of the liquid surface, updated every frame (gravity)
+  const surface = { value: 1e4 };
+  m.userData.surface = surface;
+  m.side = THREE.DoubleSide;
   m.onBeforeCompile = (shader) => {
+    shader.uniforms.uSurface = surface;
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying float vLiqY;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvLiqY = position.y;");
+      .replace("#include <common>", "#include <common>\nvarying float vLiqY;\nvarying float vWorldY;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvLiqY = position.y;")
+      .replace("#include <project_vertex>", "#include <project_vertex>\nvWorldY = (modelMatrix * vec4(transformed, 1.0)).y;");
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nvarying float vLiqY;")
+      .replace("#include <common>", "#include <common>\nvarying float vLiqY;\nvarying float vWorldY;\nuniform float uSurface;")
+      // everything above the horizontal surface is air
+      .replace("#include <clipping_planes_fragment>", "if (vWorldY > uSurface) discard;\n#include <clipping_planes_fragment>")
       .replace(
         "#include <emissivemap_fragment>",
         `#include <emissivemap_fragment>
         ${FRESNEL}
         float zDepth = smoothstep(-1.74, 0.6, vLiqY);
         totalEmissiveRadiance *= mix(2.1, 0.06, pow(zFr, 1.3)) * mix(0.55, 1.15, zDepth);
-        diffuseColor.rgb *= mix(1.0, 0.42, pow(zFr, 1.7)) * mix(0.72, 1.06, zDepth);`,
+        diffuseColor.rgb *= mix(1.0, 0.42, pow(zFr, 1.7)) * mix(0.72, 1.06, zDepth);
+        // seen through the cut, the far inner walls read as the flat, lit surface
+        if (!gl_FrontFacing) {
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0), 0.18);
+          totalEmissiveRadiance = diffuseColor.rgb * 0.6;
+        }`,
       );
     if (seeThrough) {
       shader.fragmentShader = shader.fragmentShader.replace(
@@ -172,8 +185,6 @@ export function createBottleMaterials(
 
 const dropGeo = new THREE.SphereGeometry(1, 10, 8);
 const bubbleGeo = new THREE.SphereGeometry(1, 8, 6);
-/** liquid running through the neck while pouring (hidden otherwise) */
-const neckFlowGeo = new THREE.CylinderGeometry(0.15, 0.17, 0.95, 24, 1, false).translate(0, 1.0, 0);
 const labelGeo = new THREE.CylinderGeometry(
   LABEL.radius,
   LABEL.radius,
@@ -190,14 +201,74 @@ interface Props {
   quality?: Quality;
   animated?: boolean;
   seed?: number;
+  /** liquid amount, 1 = full bottle (upright fill line) */
+  level?: { current: number };
+}
+
+/** k-th smallest value (in place, Hoare quickselect) */
+function quickselect(a: Float32Array, k: number) {
+  let lo = 0;
+  let hi = a.length - 1;
+  while (lo < hi) {
+    const pivot = a[(lo + hi) >> 1];
+    let i = lo;
+    let j = hi;
+    while (i <= j) {
+      while (a[i] < pivot) i++;
+      while (a[j] > pivot) j--;
+      if (i <= j) {
+        const t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+        i++;
+        j--;
+      }
+    }
+    if (k <= j) hi = j;
+    else if (k >= i) lo = i;
+    else break;
+  }
+  return a[k];
 }
 
 /** Pure bottle model, centred at origin, height ≈ BOTTLE.height */
 export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
-  { materials, quality = "high", animated = true, seed = 3 },
+  { materials, quality = "high", animated = true, seed = 3, level },
   ref,
 ) {
   const geo = getBottleGeometry();
+  const fallbackLevel = useRef({ current: 1 });
+  const levelRef = level ?? fallbackLevel.current;
+  const ys = useMemo(() => new Float32Array(geo.volumeSamples.length / 3), [geo]);
+  const lastFrame = useRef(-1);
+  const liquidRef = useRef<THREE.Mesh>(null);
+
+  /** Solve the horizontal surface height that holds the current volume at any tilt. */
+  const solveSurface = (mesh: THREE.Object3D, renderer: THREE.WebGLRenderer) => {
+    const frame = renderer.info.render.frame;
+    if (frame === lastFrame.current) return;
+    lastFrame.current = frame;
+    const e = mesh.matrixWorld.elements;
+    const v = geo.volumeSamples;
+    const n = ys.length;
+    for (let i = 0; i < n; i++) {
+      ys[i] = e[1] * v[i * 3] + e[5] * v[i * 3 + 1] + e[9] * v[i * 3 + 2] + e[13];
+    }
+    const frac = THREE.MathUtils.clamp(levelRef.current, 0, 1) * geo.fullFraction;
+    const k = Math.floor(frac * (n - 1));
+    const surface = materials.liquid.userData.surface as { value: number };
+    surface.value = k <= 0 ? -1e4 : quickselect(ys, k);
+  };
+
+  // runs right before the liquid is drawn, with this frame's final transforms
+  useEffect(() => {
+    const mesh = liquidRef.current;
+    if (!mesh) return;
+    mesh.onBeforeRender = (renderer) => solveSurface(mesh, renderer);
+    return () => {
+      mesh.onBeforeRender = () => {};
+    };
+  });
   const dropsRef = useRef<THREE.InstancedMesh>(null);
   const bubblesRef = useRef<THREE.InstancedMesh>(null);
   const dropCount = quality === "high" ? 170 : 45;
@@ -265,8 +336,13 @@ export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
   return (
     <group ref={ref}>
       <group position-y={BOTTLE.centerOffset}>
-        <mesh name="liquid" geometry={geo.liquid} material={materials.liquid} renderOrder={0} />
-        <mesh name="neckFlow" geometry={neckFlowGeo} material={materials.liquid} visible={false} />
+        <mesh
+          name="liquid"
+          geometry={geo.liquid}
+          material={materials.liquid}
+          renderOrder={0}
+          ref={liquidRef}
+        />
         <instancedMesh name="bubbles" ref={bubblesRef} args={[bubbleGeo, materials.bubble, bubbleCount]} frustumCulled={false} />
         <mesh geometry={geo.glass} material={materials.innerWall} scale={[0.93, 0.996, 0.93]} renderOrder={1} />
         <mesh geometry={geo.glass} material={materials.glass} renderOrder={2} />

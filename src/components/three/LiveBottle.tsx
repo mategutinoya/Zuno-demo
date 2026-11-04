@@ -48,7 +48,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
   const level = useRef(1);
   /** scroll progress and velocity with inertia, so wheel/touch steps never jerk the bottle */
   const smooth = useRef({ s: -1, vel: 0 });
-  const parts = useRef<{ cap: THREE.Object3D; liquid: THREE.Object3D; bubbles: THREE.Object3D; neck: THREE.Object3D } | null>(null);
+  const parts = useRef<{ cap: THREE.Object3D; bubbles: THREE.Object3D } | null>(null);
 
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
 
@@ -173,10 +173,8 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
 
     if (!parts.current) {
       const cap = g.getObjectByName("cap");
-      const liquid = g.getObjectByName("liquid");
       const bubbles = g.getObjectByName("bubbles");
-      const neck = g.getObjectByName("neckFlow");
-      if (cap && liquid && bubbles && neck) parts.current = { cap, liquid, bubbles, neck };
+      if (cap && bubbles) parts.current = { cap, bubbles };
     }
     const pp = parts.current;
     if (pp) {
@@ -186,29 +184,36 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
       pp.cap.rotation.set(o * 1.2, o * 5, -o * 2.4);
       pp.cap.scale.setScalar(1 - ss(o, 0.75, 1));
       pp.cap.visible = o < 0.999;
-      // level drains with the actual flow and refills (rising smoothly) only
-      // once the bottle is upright and capped; tipped over, gravity pulls the
-      // liquid toward the neck, so the empty space opens at the base
-      if (pour.flow > 0.01) level.current = Math.max(0.5, level.current - dt * 0.085 * pour.flow);
-      else if (ph.tilt < 0.02 && ph.cap < 0.02) level.current = damp(level.current, 1, 1.4, dt);
-      const k = level.current;
-      const pivot = THREE.MathUtils.lerp(-1.74, 0.608, ss(ph.tilt, 0.25, 0.7));
-      pp.liquid.scale.y = k;
-      pp.liquid.position.y = pivot * (1 - k);
-      pp.bubbles.visible = k > 0.97 && ph.tilt < 0.05;
-      pp.neck.visible = pour.flow > 0.15 && ph.tilt > 0.5;
+      // bubbles only make sense while the bottle stands upright and full
+      pp.bubbles.visible = level.current > 0.97 && ph.tilt < 0.05;
     }
 
-    // hand the mouth position + pour direction to the stream
-    pour.want = ph.tilt > 0.6 && level.current > 0.505;
-    if (pour.active || pour.want) {
-      g.updateMatrixWorld();
-      const top = 1.5 + BOTTLE.centerOffset;
-      g.localToWorld(mouthLocal.set(0, top, 0));
-      g.localToWorld(neckLocal.set(0, top + 0.4, 0));
+    // ---- gravity: the liquid surface stays horizontal (solved in BottleModel)
+    // and the bottle only pours once that surface rises above the mouth.
+    g.updateMatrixWorld();
+    const top = 1.5 + BOTTLE.centerOffset;
+    g.localToWorld(mouthLocal.set(0, top, 0));
+    g.localToWorld(neckLocal.set(0, top + 0.4, 0));
+    const surfaceY = (materials.liquid.userData.surface as { value: number }).value;
+    const unit = Math.max(g.scale.x, 1e-4);
+    // how far (in bottle units) the mouth sits below the liquid surface
+    const head = (surfaceY - mouthLocal.y) / unit;
+    const capOff = ph.cap > 0.6;
+    pour.want = !reduce && capOff && head > 0.04 && level.current > 0.32;
+    // once the stream breaks, its last stretch is free liquid: it keeps falling
+    // from where it left the bottle instead of following the mouth
+    if (pour.want) {
       pour.mouth.copy(mouthLocal);
       pour.dir.copy(neckLocal).sub(mouthLocal).normalize();
-      pour.scale = g.scale.x;
+      pour.scale = unit;
+    }
+    // drain with what actually leaves the bottle (more pressure, more flow);
+    // refill — rising smoothly — only once it is upright and capped again
+    if (pour.flow > 0.01) {
+      const pressure = THREE.MathUtils.clamp(head / 0.6, 0.15, 1);
+      level.current = Math.max(0.3, level.current - dt * 0.1 * pour.flow * pressure);
+    } else if (ph.tilt < 0.02 && ph.cap < 0.02) {
+      level.current = damp(level.current, 1, 2.2, dt);
     }
 
     // ---- liquid follows flavour colour
@@ -226,5 +231,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     materials.bubble.emissive.copy(liq).lerp(white, 0.5).multiplyScalar(0.25);
   });
 
-  return <BottleModel ref={group} materials={materials} quality={quality} animated={!sceneState.reducedMotion} />;
+  return (
+    <BottleModel ref={group} materials={materials} quality={quality} animated={!sceneState.reducedMotion} level={level} />
+  );
 }

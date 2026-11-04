@@ -35,17 +35,39 @@ function build() {
 
   const glass = new THREE.LatheGeometry(profile, 96);
 
-  // Liquid: inset profile up to the fill level
-  const fill = BOTTLE.fillLevel;
-  const liquidPts: THREE.Vector2[] = [v(0.001, -1.74)];
+  // Liquid: fills the whole interior; the visible amount is cut at runtime by a
+  // horizontal (world-space) surface, so it behaves with gravity when tilted.
+  const INSET = 0.945;
+  const liquidBottom = -1.74;
+  const liquidTop = 1.44;
+  const liquidPts: THREE.Vector2[] = [v(0.001, liquidBottom)];
   for (const p of profile) {
-    if (p.y <= -1.74 || p.y >= fill) continue;
+    if (p.y <= liquidBottom || p.y >= liquidTop) continue;
     if (p.x < 0.05) continue;
-    liquidPts.push(v(p.x * 0.945, Math.max(p.y, -1.74)));
+    liquidPts.push(v(p.x * INSET, p.y));
   }
-  const rf = radiusAt(fill) * 0.945;
-  liquidPts.push(v(rf, fill), v(rf * 0.6, fill + 0.006), v(0.001, fill + 0.008));
+  const rt = radiusAt(liquidTop) * INSET;
+  liquidPts.push(v(rt, liquidTop), v(0.001, liquidTop));
   const liquid = new THREE.LatheGeometry(liquidPts, 64);
+
+  // Uniform sample points inside the liquid volume (rejection sampling), used to
+  // find the surface height that keeps the volume constant at any tilt.
+  const rMax = BOTTLE.bodyRadius * INSET;
+  const samples: number[] = [];
+  let seed = 12345;
+  const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  let below = 0;
+  while (samples.length < 3600 * 3) {
+    const x = (rand() * 2 - 1) * rMax;
+    const z = (rand() * 2 - 1) * rMax;
+    const y = liquidBottom + rand() * (liquidTop - liquidBottom);
+    if (Math.hypot(x, z) > radiusAt(y) * INSET) continue;
+    samples.push(x, y, z);
+    if (y < BOTTLE.fillLevel) below++;
+  }
+  const volumeSamples = new Float32Array(samples);
+  /** fraction of the interior that is liquid when the bottle is full (upright fill line) */
+  const fullFraction = below / (samples.length / 3);
 
   // Crown cap with crimped flutes
   const cap = new THREE.CylinderGeometry(0.218, 0.226, 0.22, 126, 6, false);
@@ -64,7 +86,7 @@ function build() {
   }
   cap.computeVertexNormals();
 
-  return { profile, radiusAt, glass, liquid, cap };
+  return { profile, radiusAt, glass, liquid, cap, volumeSamples, fullFraction };
 }
 
 export function getBottleGeometry() {
