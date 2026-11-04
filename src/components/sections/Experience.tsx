@@ -10,32 +10,32 @@ gsap.registerPlugin(ScrollTrigger);
 
 export const SHOTS = [
   {
-    src: "/experience/photo-pink-lychee.jpg",
+    src: "/experience/moment-fresh-cut.jpg",
     title: "Fresh Cut",
     kicker: "Pink Lychee",
     text: "Lychee, frambuesa y una burbuja fina. Cada sabor empieza en la fruta.",
-    alt: "Botella ZUNO Pink Lychee entre lychees y frambuesas, con salpicaduras rosas",
+    alt: "Botella ZUNO Pink Lychee sobre una superficie rosa con lychees pelados, frambuesas y una hoja",
   },
   {
-    src: "/experience/photo-mango-passion.jpg",
+    src: "/experience/moment-golden-hour.jpg",
     title: "Golden Hour",
     kicker: "Mango Passion",
     text: "Mango maduro y maracuyá. El atardecer tropical, servido bien frío.",
-    alt: "Botella ZUNO Mango Passion con mango en cubos, maracuyá y salpicaduras doradas",
+    alt: "Botella ZUNO Mango Passion al atardecer con mango, maracuyá y hielo junto a palmeras",
   },
   {
-    src: "/experience/photo-achachairu-citrus.jpg",
+    src: "/experience/moment-bright-side.jpg",
     title: "Bright Side",
     kicker: "Achachairú Citrus",
     text: "Achachairú y lima: ácido, luminoso y con condensación en cada gota.",
-    alt: "Botella ZUNO Achachairú Citrus con achachairús, lima y salpicaduras verdes",
+    alt: "Botella ZUNO Achachairú Citrus a plena luz con achachairú, lima y hielo",
   },
   {
-    src: "/experience/photo-berry-mood.jpg",
+    src: "/experience/moment-night-mood.jpg",
     title: "Night Mood",
     kicker: "Berry Mood",
     text: "Mora y arándano para las noches que piden algo más intenso.",
-    alt: "Botella ZUNO Berry Mood rodeada de moras y arándanos con salpicaduras violetas",
+    alt: "Botella ZUNO Berry Mood en ambiente nocturno violeta con moras, arándanos y hielo",
   },
 ] as const;
 

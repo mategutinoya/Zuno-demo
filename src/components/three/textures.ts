@@ -487,100 +487,183 @@ export function createWordmarkCanvas() {
 /* ---------------------------------------------------- fruit cut faces */
 
 export function createLimeSliceTexture() {
-  const S = 512;
+  const S = 1024;
   const { c, ctx } = canvas(S, S);
+  const r = rng(5);
   const cx = S / 2;
-  ctx.fillStyle = "#3D7F1C";
+  // rind → pith → flesh
+  ctx.fillStyle = "#3E7F1B";
   ctx.beginPath();
   ctx.arc(cx, cx, S / 2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#F4F8DA";
+  ctx.fillStyle = "#6FA82E";
   ctx.beginPath();
-  ctx.arc(cx, cx, S * 0.45, 0, Math.PI * 2);
+  ctx.arc(cx, cx, S * 0.475, 0, Math.PI * 2);
+  ctx.fill();
+  const pith = ctx.createRadialGradient(cx, cx, S * 0.4, cx, cx, S * 0.465);
+  pith.addColorStop(0, "#F3F6D4");
+  pith.addColorStop(1, "#DDE9A6");
+  ctx.fillStyle = pith;
+  ctx.beginPath();
+  ctx.arc(cx, cx, S * 0.462, 0, Math.PI * 2);
   ctx.fill();
   const segs = 10;
   for (let i = 0; i < segs; i++) {
-    const a0 = (i / segs) * Math.PI * 2 + 0.03;
-    const a1 = ((i + 1) / segs) * Math.PI * 2 - 0.03;
-    const g = ctx.createRadialGradient(cx, cx, S * 0.04, cx, cx, S * 0.42);
-    g.addColorStop(0, "#E8F5A8");
-    g.addColorStop(1, "#A9D64A");
-    ctx.fillStyle = g;
+    const a0 = (i / segs) * Math.PI * 2 + 0.018;
+    const a1 = ((i + 1) / segs) * Math.PI * 2 - 0.018;
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(cx + Math.cos((a0 + a1) / 2) * S * 0.05, cx + Math.sin((a0 + a1) / 2) * S * 0.05);
-    ctx.arc(cx, cx, S * 0.42, a0, a1);
+    ctx.moveTo(cx + Math.cos((a0 + a1) / 2) * S * 0.035, cx + Math.sin((a0 + a1) / 2) * S * 0.035);
+    ctx.arc(cx, cx, S * 0.415, a0, a1);
     ctx.closePath();
+    const g = ctx.createRadialGradient(cx, cx, S * 0.03, cx, cx, S * 0.42);
+    g.addColorStop(0, "#E9F4AE");
+    g.addColorStop(0.55, "#BFE05C");
+    g.addColorStop(1, "#9CCB3A");
+    ctx.fillStyle = g;
     ctx.fill();
-    // juice vesicles
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx.lineWidth = 3;
-    for (let v = 0; v < 6; v++) {
-      const a = a0 + ((a1 - a0) * (v + 0.5)) / 6;
+    ctx.clip();
+    // juice vesicles: elongated, translucent teardrops pointing to the centre
+    for (let v = 0; v < 120; v++) {
+      const a = a0 + (a1 - a0) * r();
+      const d = S * (0.07 + r() * 0.34);
+      const x = cx + Math.cos(a) * d;
+      const y = cx + Math.sin(a) * d;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(a);
+      ctx.fillStyle = `rgba(${230 + r() * 25},255,${170 + r() * 60},${0.18 + r() * 0.3})`;
       ctx.beginPath();
-      ctx.moveTo(cx + Math.cos(a) * S * 0.12, cx + Math.sin(a) * S * 0.12);
-      ctx.lineTo(cx + Math.cos(a) * S * 0.38, cx + Math.sin(a) * S * 0.38);
-      ctx.stroke();
+      ctx.ellipse(0, 0, S * (0.025 + r() * 0.03), S * (0.006 + r() * 0.006), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.beginPath();
+      ctx.ellipse(-S * 0.006, -S * 0.002, S * 0.008, S * 0.002, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
+    ctx.restore();
   }
+  // centre core
+  ctx.fillStyle = "#F1F6D2";
+  ctx.beginPath();
+  ctx.arc(cx, cx, S * 0.03, 0, Math.PI * 2);
+  ctx.fill();
   return toTexture(c);
 }
 
 export function createPassionPulpTexture() {
-  const S = 512;
+  const S = 1024;
   const { c, ctx } = canvas(S, S);
   const r = rng(42);
   const cx = S / 2;
-  ctx.fillStyle = "#F4E9C8";
+  // white-cream pith ring, then the pulp cavity
+  ctx.fillStyle = "#F2E6C9";
   ctx.beginPath();
   ctx.arc(cx, cx, S / 2, 0, Math.PI * 2);
   ctx.fill();
-  const g = ctx.createRadialGradient(cx, cx, 10, cx, cx, S * 0.44);
-  g.addColorStop(0, "#FFB300");
-  g.addColorStop(1, "#F08A00");
-  ctx.fillStyle = g;
+  const cav = ctx.createRadialGradient(cx, cx, 10, cx, cx, S * 0.44);
+  cav.addColorStop(0, "#E9A20A");
+  cav.addColorStop(0.8, "#C9780A");
+  cav.addColorStop(1, "#9A5A12");
+  ctx.fillStyle = cav;
   ctx.beginPath();
   ctx.arc(cx, cx, S * 0.43, 0, Math.PI * 2);
   ctx.fill();
-  for (let i = 0; i < 70; i++) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cx, S * 0.43, 0, Math.PI * 2);
+  ctx.clip();
+  // gelatinous seed sacs: translucent yellow blobs, each around a dark seed
+  for (let i = 0; i < 240; i++) {
     const a = r() * Math.PI * 2;
-    const d = Math.sqrt(r()) * S * 0.38;
+    const d = Math.sqrt(r()) * S * 0.42;
     const x = cx + Math.cos(a) * d;
     const y = cx + Math.sin(a) * d;
-    ctx.fillStyle = "rgba(255,214,90,0.9)";
+    const rad = S * (0.022 + r() * 0.018);
+    const g = ctx.createRadialGradient(x - rad * 0.3, y - rad * 0.3, rad * 0.1, x, y, rad);
+    g.addColorStop(0, "rgba(255,236,120,0.95)");
+    g.addColorStop(0.7, "rgba(250,190,30,0.85)");
+    g.addColorStop(1, "rgba(200,120,10,0.0)");
+    ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(x, y, 16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#24140A";
-    ctx.beginPath();
-    ctx.ellipse(x, y, 7, 5, a, 0, Math.PI * 2);
+    ctx.arc(x, y, rad, 0, Math.PI * 2);
     ctx.fill();
   }
+  for (let i = 0; i < 150; i++) {
+    const a = r() * Math.PI * 2;
+    const d = Math.sqrt(r()) * S * 0.4;
+    const x = cx + Math.cos(a) * d;
+    const y = cx + Math.sin(a) * d;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(r() * Math.PI);
+    ctx.fillStyle = "#1A0D06";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, S * 0.011, S * 0.007, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.beginPath();
+    ctx.ellipse(-S * 0.003, -S * 0.002, S * 0.003, S * 0.0015, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
   return toTexture(c);
 }
 
 export function createAchachairuFleshTexture() {
-  const S = 512;
+  const S = 1024;
   const { c, ctx } = canvas(S, S);
+  const r = rng(9);
   const cx = S / 2;
-  ctx.fillStyle = "#F28A12";
+  // thin glossy orange rind with a pale inner edge
+  ctx.fillStyle = "#E9780C";
   ctx.beginPath();
   ctx.arc(cx, cx, S / 2, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = "#F7C77A";
+  ctx.beginPath();
+  ctx.arc(cx, cx, S * 0.475, 0, Math.PI * 2);
+  ctx.fill();
+  // translucent white, slightly fibrous flesh
   const g = ctx.createRadialGradient(cx, cx, 10, cx, cx, S * 0.46);
-  g.addColorStop(0, "#FFFFFF");
-  g.addColorStop(0.8, "#FBF4E6");
-  g.addColorStop(1, "#F2DFC0");
+  g.addColorStop(0, "#FFFDF8");
+  g.addColorStop(0.75, "#F8F1E4");
+  g.addColorStop(1, "#EADCC2");
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(cx, cx, S * 0.46, 0, Math.PI * 2);
+  ctx.arc(cx, cx, S * 0.462, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#8A5A2B";
-  ctx.beginPath();
-  ctx.ellipse(cx - 30, cx, 46, 70, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#A8743E";
-  ctx.beginPath();
-  ctx.ellipse(cx + 48, cx + 10, 30, 50, -0.3, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.strokeStyle = "rgba(225,210,185,0.35)";
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 160; i++) {
+    const a = r() * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * S * 0.18, cx + Math.sin(a) * S * 0.18);
+    ctx.lineTo(cx + Math.cos(a) * S * 0.45, cx + Math.sin(a) * S * 0.45);
+    ctx.stroke();
+  }
+  // large glossy brown seed
+  const seed = (x: number, y: number, rx: number, ry: number, rot: number) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    const sg = ctx.createRadialGradient(-rx * 0.3, -ry * 0.3, 2, 0, 0, Math.max(rx, ry));
+    sg.addColorStop(0, "#B8834B");
+    sg.addColorStop(0.7, "#7A4B22");
+    sg.addColorStop(1, "#4E2C12");
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.beginPath();
+    ctx.ellipse(-rx * 0.35, -ry * 0.4, rx * 0.25, ry * 0.12, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+  seed(cx - 40, cx, 95, 150, 0.15);
+  seed(cx + 95, cx + 20, 50, 85, -0.35);
   return toTexture(c);
 }

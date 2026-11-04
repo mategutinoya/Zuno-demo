@@ -4,7 +4,17 @@ const { chromium } = require("playwright");
 const { mkdir, writeFile } = require("node:fs/promises");
 
 const BASE = process.env.STUDIO_URL ?? "http://localhost:3000";
-const SHOTS = { "golden-hour": [1800, 1500], "fresh-cut": [1800, 1500], "ice-cold": [1800, 1500], lineup: [1800, 1500], story: [1200, 1500] };
+const SHOTS = {
+  "moment-fresh-cut": [700, 1608],
+  "moment-golden-hour": [700, 1608],
+  "moment-bright-side": [700, 1608],
+  "moment-night-mood": [700, 1608],
+  "golden-hour": [1800, 1500],
+  "fresh-cut": [1800, 1500],
+  "ice-cold": [1800, 1500],
+  lineup: [1800, 1500],
+  story: [1200, 1500],
+};
 const only = process.argv.slice(2);
 
 (async () => {

@@ -40,7 +40,78 @@ interface Shot {
 
 const FLOOR = -1.72;
 
+const P: [number, number] = [700, 1608];
+
 export const SHOTS: Record<string, Shot> = {
+  "moment-fresh-cut": {
+    size: P,
+    camera: { pos: [0, -0.05, 9.6], look: [0, -0.2, 0], fov: 30 },
+    backdrop: { top: "#FBD9E6", mid: "#F49CC2", bottom: "#E2558F", glow: "#FFE6F0" },
+    bottles: [{ flavor: 0, pos: [0, 0, 0], rot: [0, -0.3, 0] }],
+    fruits: [
+      { kind: "lychee", pos: [-0.62, FLOOR + 0.26, 0.95], scale: 1 },
+      { kind: "lycheePeeled", pos: [0.42, FLOOR + 0.24, 1.35], scale: 0.95 },
+      { kind: "raspberry", pos: [0.82, FLOOR + 0.21, 0.55], rot: [0.3, 0, 0.4], scale: 0.95 },
+      { kind: "raspberry", pos: [-0.2, FLOOR + 0.2, 1.75], rot: [-0.4, 0.3, 0.2], scale: 0.8 },
+      { kind: "leaf", pos: [-0.95, FLOOR + 0.03, 1.4], rot: [-1.45, 0, 0.7], scale: 1.2 },
+      { kind: "raspberry", pos: [0.72, 1.05, -0.4], rot: [0.6, 0.2, 0], scale: 0.75 },
+      { kind: "lychee", pos: [-0.72, 0.55, -0.5], scale: 0.75 },
+    ],
+    floor: "gloss",
+    floorColor: "#F0A6C6",
+    lights: "pink",
+  },
+  "moment-golden-hour": {
+    size: P,
+    camera: { pos: [0.15, 0.15, 9.8], look: [0.05, -0.15, 0], fov: 30 },
+    backdrop: { top: "#3B1F5C", mid: "#E85A8E", bottom: "#FFA24C", glow: "#FFC58A", sun: { x: 0.72, y: 0.6, r: 0.11, color: "#FFE7B0" } },
+    bottles: [{ flavor: 1, pos: [0, 0, 0], rot: [0, -0.35, 0] }],
+    fruits: [
+      { kind: "passionHalf", pos: [0.62, FLOOR + 0.28, 1.05], rot: [0.95, 0, 0.2], scale: 0.95 },
+      { kind: "mango", pos: [-0.72, FLOOR + 0.24, 0.55], rot: [0, 0.5, 0], scale: 0.95 },
+      { kind: "mangoCube", pos: [-0.25, FLOOR + 0.1, 1.55], rot: [0, 0.6, 0], scale: 1 },
+      { kind: "ice", pos: [0.15, FLOOR + 0.2, 1.9], rot: [0, 0.4, 0.05], scale: 0.8 },
+      { kind: "leaf", pos: [-0.95, FLOOR + 0.03, 1.35], rot: [-1.45, 0, 0.5], scale: 1.1 },
+    ],
+    floor: "reflector",
+    floorColor: "#4a2232",
+    palms: true,
+    lights: "warm",
+  },
+  "moment-bright-side": {
+    size: P,
+    camera: { pos: [0, -0.05, 9.6], look: [0, -0.2, 0], fov: 30 },
+    backdrop: { top: "#FFF8DA", mid: "#EEF4A2", bottom: "#BCD552", glow: "#FFFFFF" },
+    bottles: [{ flavor: 2, pos: [0, 0, 0], rot: [0, -0.3, 0] }],
+    fruits: [
+      { kind: "achachairuHalf", pos: [-0.62, FLOOR + 0.24, 1.0], rot: [0.95, 0, -0.25], scale: 1 },
+      { kind: "limeSlice", pos: [0.62, FLOOR + 0.18, 1.1], rot: [1.15, 0.2, -0.25], scale: 0.9 },
+      { kind: "achachairu", pos: [0.85, FLOOR + 0.25, 0.3], rot: [0.2, 0, 0.3], scale: 0.95 },
+      { kind: "ice", pos: [-0.05, FLOOR + 0.2, 1.75], rot: [0, -0.3, 0.04], scale: 0.85 },
+      { kind: "lime", pos: [-0.85, FLOOR + 0.25, 0.1], scale: 0.85 },
+      { kind: "leaf", pos: [0.95, FLOOR + 0.03, 1.55], rot: [-1.45, 0, -0.8], scale: 1.1 },
+    ],
+    floor: "gloss",
+    floorColor: "#D7E47E",
+    lights: "studio",
+  },
+  "moment-night-mood": {
+    size: P,
+    camera: { pos: [0.1, 0.1, 9.2], look: [0, -0.1, 0], fov: 30 },
+    backdrop: { top: "#120A1A", mid: "#2D1840", bottom: "#4A2466", glow: "#8054A8" },
+    bottles: [{ flavor: 3, pos: [0, 0, 0], rot: [0, -0.25, 0] }],
+    fruits: [
+      { kind: "blackberry", pos: [-0.62, FLOOR + 0.25, 0.95], rot: [0.3, 0, 0.4], scale: 0.95 },
+      { kind: "blueberry", pos: [0.55, FLOOR + 0.14, 1.2], scale: 0.95 },
+      { kind: "blueberry", pos: [0.85, FLOOR + 0.14, 0.7], scale: 0.85 },
+      { kind: "ice", pos: [-0.1, FLOOR + 0.2, 1.75], rot: [0, 0.5, 0.05], scale: 0.85 },
+      { kind: "blackberry", pos: [0.7, 0.85, -0.4], rot: [0.5, 0, 0.2], scale: 0.75 },
+      { kind: "blueberry", pos: [-0.75, 0.4, -0.3], scale: 0.7 },
+    ],
+    floor: "reflector",
+    floorColor: "#1a0f24",
+    lights: "night",
+  },
   "golden-hour": {
     size: [1800, 1500],
     camera: { pos: [0.6, 0.35, 9.6], look: [0.2, -0.15, 0], fov: 30 },
