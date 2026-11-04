@@ -10,7 +10,8 @@ export const BOTTLE = {
   get centerOffset() {
     return -(this.top + this.bottom) / 2;
   },
-  fillLevel: 0.6,
+  /** filled up into the neck, like a real 300 ml long-neck */
+  fillLevel: 1.05,
 };
 
 export const LABEL = {

@@ -96,7 +96,7 @@ export function PourStream() {
     const dt = Math.min(delta, 0.05);
 
     // ---- flow simulation (time-based, not scroll-locked)
-    pour.flow = THREE.MathUtils.damp(pour.flow, pour.want ? 1 : 0, pour.want ? 1.4 : 2.2, dt);
+    pour.flow = THREE.MathUtils.damp(pour.flow, pour.want ? 1 : 0, pour.want ? 3 : 2.2, dt);
     if (pour.want && !pour.active) {
       pour.active = true;
       pour.head = 0;
@@ -145,7 +145,7 @@ export function PourStream() {
     const pos = geometry.attributes.position as THREE.BufferAttribute;
     const nor = geometry.attributes.normal as THREE.BufferAttribute;
     // thin trickle at the start and end, full stream in between
-    const r0 = 0.085 * S * (0.22 + 0.78 * THREE.MathUtils.smoothstep(pour.flow, 0, 0.8));
+    const r0 = 0.085 * S * (0.45 + 0.55 * THREE.MathUtils.smoothstep(pour.flow, 0, 0.6));
     for (let i = 0; i < RINGS; i++) {
       const f = i / (RINGS - 1);
       const a = pour.tail + (pour.head - pour.tail) * f;

@@ -26,7 +26,7 @@ function pourPhases(s: number) {
   const back = 1 - ss(s, 0.78, 0.94);
   return {
     cap: ss(s, 0.01, 0.1) * back,
-    tilt: ss(s, 0.03, 0.2) * (1 - ss(s, 0.64, 0.86)),
+    tilt: ss(s, 0.02, 0.16) * (1 - ss(s, 0.64, 0.86)),
   };
 }
 
@@ -200,7 +200,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     // how far (in bottle units) the mouth sits below the liquid surface
     const head = (surfaceY - mouthLocal.y) / unit;
     const capOff = ph.cap > 0.6;
-    pour.want = !reduce && capOff && head > 0.04 && level.current > 0.22;
+    pour.want = !reduce && capOff && head > 0.015 && level.current > 0.22;
     // once the stream breaks, its last stretch is free liquid: it keeps falling
     // from where it left the bottle instead of following the mouth
     if (pour.want) {
