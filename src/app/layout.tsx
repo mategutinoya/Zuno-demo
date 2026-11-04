@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s · ZUNO",
   },
   description:
-    "ZUNO es un hard seltzer frutal en botella de vidrio de 300 ml. Pink Lychee, Mango Passion, Achachairú Citrus y Berry Mood. Una vuelta más de sabor. Solo para mayores de 18 años.",
+    "ZUNO es un hard seltzer frutal zero azúcar, en botella de vidrio de 300 ml. Pink Lychee, Mango Passion, Achachairú Citrus y Berry Mood. Una vuelta más de sabor. Solo para mayores de 18 años.",
   openGraph: {
     title: "ZUNO — Drink Different.",
     description: "Hard Seltzer frutal. Una vuelta más de sabor.",

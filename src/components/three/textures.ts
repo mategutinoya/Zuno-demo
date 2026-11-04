@@ -302,18 +302,42 @@ export function createLabelTexture(flavor: Flavor, fonts: CanvasFonts) {
 
   // fruits
   const [f1, f2] = flavor.fruits;
-  fruitIcon(ctx, f1, cx - H * 0.04, H * 0.69, H * 0.05);
-  fruitIcon(ctx, f2, cx + H * 0.09, H * 0.705, H * 0.034);
+  fruitIcon(ctx, f1, cx - H * 0.04, H * 0.645, H * 0.045);
+  fruitIcon(ctx, f2, cx + H * 0.085, H * 0.658, H * 0.031);
 
   // product info
   ctx.fillStyle = L.ink;
-  ctx.font = `800 ${H * 0.052}px ${fonts.display}`;
+  ctx.font = `800 ${H * 0.05}px ${fonts.display}`;
   withSpacing(ctx, H * 0.006);
-  ctx.fillText("HARD SELTZER", cx, H * 0.8);
+  ctx.fillText("HARD SELTZER", cx, H * 0.735);
   withSpacing(ctx, 0);
-  ctx.font = `500 ${H * 0.036}px ${fonts.display}`;
-  ctx.fillText("4.5% Alc. Vol.", cx, H * 0.862);
-  ctx.fillText("300 ml", cx, H * 0.912);
+
+  // "ZERO AZÚCAR" badge: rounded pill in a deep shade of the label colour
+  {
+    const pw = H * 0.24;
+    const ph = H * 0.1;
+    const px = cx - pw / 2;
+    const py = H * 0.775;
+    const pill =
+      flavor.ink === "light"
+        ? new THREE.Color(L.top).lerp(new THREE.Color("#ffffff"), 0.15)
+        : new THREE.Color(flavor.accent).multiplyScalar(0.58);
+    ctx.fillStyle = `#${pill.getHexString()}`;
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, ph * 0.28);
+    ctx.fill();
+    ctx.fillStyle = "#FFF8F2";
+    ctx.font = `800 ${H * 0.036}px ${fonts.display}`;
+    withSpacing(ctx, H * 0.002);
+    ctx.fillText("ZERO", cx, py + ph * 0.3);
+    ctx.fillText("AZÚCAR", cx, py + ph * 0.72);
+    withSpacing(ctx, 0);
+  }
+
+  ctx.fillStyle = L.ink;
+  ctx.font = `500 ${H * 0.032}px ${fonts.display}`;
+  ctx.fillText("4.5% Alc. Vol.", cx, H * 0.91);
+  ctx.fillText("300 ml", cx, H * 0.948);
 
   // left side panel — slogan (vertical)
   ctx.save();
@@ -337,7 +361,7 @@ export function createLabelTexture(flavor: Flavor, fonts: CanvasFonts) {
   ctx.font = `500 ${H * 0.024}px ${fonts.display}`;
   const lines = [
     "Bebida alcohólica gasificada",
-    "sabor a fruta.",
+    "sabor a fruta. Zero azúcar.",
     "Contenido neto: 300 ml",
     "Graduación objetivo: 4.5% Alc. Vol.",
     "",

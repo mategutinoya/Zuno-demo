@@ -87,6 +87,7 @@ export function Hero() {
             <p data-hero-fade className="eyebrow text-cream/80">
               Hard Seltzer <span className="mx-3 text-cream/40">/</span> 300 ml
               <span className="mx-3 text-cream/40">/</span> 4.5% Alc. Vol.*
+              <span className="mx-3 text-cream/40">/</span> Zero azúcar
             </p>
             <p data-hero-fade className="eyebrow text-cream/80">
               4 sabores · Edición 2026

@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 const SPECS = [
   { value: 300, decimals: 0, unit: "ml", label: "Botella de vidrio", note: "El formato justo: se sirve frío y se disfruta de principio a fin." },
   { value: 4.5, decimals: 1, unit: "%", label: "Alc. Vol.*", note: "Graduación objetivo, ligera y equilibrada." },
+  { value: 0, decimals: 0, unit: "g", label: "Azúcar", note: "Zero azúcar: todo el sabor de la fruta, sin azúcar añadida." },
   { value: 4, decimals: 0, unit: "", label: "Sabores", note: "Cuatro universos frutales, una misma actitud." },
 ];
 
@@ -90,7 +91,7 @@ export function OurDrink() {
               </span>
             </h2>
             <p data-reveal className="mt-8 max-w-sm text-lg leading-relaxed text-ink/75">
-              ZUNO es un hard seltzer frutal: agua con gas, un toque de alcohol y fruta con carácter, en una botella de
+              ZUNO es un hard seltzer frutal y zero azúcar: agua con gas, un toque de alcohol y fruta con carácter, en una botella de
               vidrio de 300 ml pensada para compartir buenos momentos.
             </p>
             <div data-reveal className="mt-10 flex max-w-sm items-start gap-4 border-t border-ink/15 pt-6">
@@ -129,7 +130,10 @@ export function OurDrink() {
               </div>
             ))}
             <div data-reveal className="pt-6">
-              <span className="display inline-block rounded-full bg-ink px-4 py-2 text-lg text-cream">Hard Seltzer</span>
+              <div className="flex flex-wrap gap-2">
+                <span className="display inline-block rounded-full bg-ink px-4 py-2 text-lg text-cream">Hard Seltzer</span>
+                <span className="display inline-block rounded-full bg-hot px-4 py-2 text-lg text-cream">Zero azúcar</span>
+              </div>
               <p className="mt-4 text-xs leading-relaxed text-ink/50">
                 *4.5% Alc. Vol. es la graduación objetivo de formulación, sujeta a validación final.
               </p>

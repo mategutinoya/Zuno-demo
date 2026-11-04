@@ -168,7 +168,7 @@ export function Flavors() {
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-6 text-xs tracking-[0.16em] uppercase opacity-60">Hard Seltzer · 300 ml · 4.5% Alc. Vol.*</p>
+                  <p className="mt-6 text-xs tracking-[0.16em] uppercase opacity-60">Hard Seltzer · Zero azúcar · 300 ml · 4.5% Alc. Vol.*</p>
                 </motion.div>
               </motion.div>
             </AnimatePresence>

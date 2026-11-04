@@ -1,6 +1,6 @@
 import { Crown } from "@/components/brand/ZunoLogo";
 
-const ITEMS = ["DRINK DIFFERENT", "Una vuelta más de sabor", "HARD SELTZER", "300 ML", "4.5% ALC. VOL.*"];
+const ITEMS = ["DRINK DIFFERENT", "Una vuelta más de sabor", "HARD SELTZER", "Zero azúcar", "300 ML", "4.5% ALC. VOL.*"];
 
 export function Marquee({ className = "" }: { className?: string }) {
   const row = (
