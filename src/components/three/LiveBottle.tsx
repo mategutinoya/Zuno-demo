@@ -26,9 +26,6 @@ function pourPhases(s: number) {
   return {
     cap: ss(s, 0.02, 0.16) * back,
     tilt: ss(s, 0.06, 0.32) * (1 - ss(s, 0.5, 0.72)),
-    head: ss(s, 0.2, 0.36),
-    tail: ss(s, 0.45, 0.56),
-    drain: ss(s, 0.22, 0.5) * back,
   };
 }
 
@@ -47,6 +44,8 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
   const shownFlavor = useRef(flavorStore.get());
   const pose = useRef({ x: 0, y: 0, s: 0.0001, rx: 0, ry: 0, rz: 0, init: false });
   const pointer = useRef({ x: 0, y: 0 });
+  /** liquid level 1 = full; drains while pouring, refills once capped and upright */
+  const level = useRef(1);
   const parts = useRef<{ cap: THREE.Object3D; liquid: THREE.Object3D; bubbles: THREE.Object3D; neck: THREE.Object3D } | null>(null);
 
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
@@ -175,21 +174,22 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
       pp.cap.rotation.set(o * 1.2, o * 5, -o * 2.4);
       pp.cap.scale.setScalar(1 - ss(o, 0.75, 1));
       pp.cap.visible = o < 0.999;
-      // level drops while it pours; once tipped over, gravity pulls the
+      // level drains with the actual flow and refills (rising smoothly) only
+      // once the bottle is upright and capped; tipped over, gravity pulls the
       // liquid toward the neck, so the empty space opens at the base
-      const k = 1 - 0.34 * ph.drain;
+      if (pour.flow > 0.01) level.current = Math.max(0.5, level.current - dt * 0.15 * pour.flow);
+      else if (ph.tilt < 0.02 && ph.cap < 0.02) level.current = damp(level.current, 1, 1.4, dt);
+      const k = level.current;
       const pivot = THREE.MathUtils.lerp(-1.74, 0.608, ss(ph.tilt, 0.25, 0.7));
       pp.liquid.scale.y = k;
       pp.liquid.position.y = pivot * (1 - k);
       pp.bubbles.visible = k > 0.97 && ph.tilt < 0.05;
-      const flowing = pour.head - pour.tail > 0.002 && ph.tilt > 0.5;
-      pp.neck.visible = flowing;
+      pp.neck.visible = pour.flow > 0.15 && ph.tilt > 0.5;
     }
 
     // hand the mouth position + pour direction to the stream
-    pour.head = ph.head;
-    pour.tail = Math.min(ph.tail, ph.head);
-    if (pour.head - pour.tail > 0.002) {
+    pour.want = ph.tilt > 0.6 && level.current > 0.505;
+    if (pour.active || pour.want) {
       g.updateMatrixWorld();
       const top = 1.5 + BOTTLE.centerOffset;
       g.localToWorld(mouthLocal.set(0, top, 0));

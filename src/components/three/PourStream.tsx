@@ -5,12 +5,19 @@ import { useFrame } from "@react-three/fiber";
 import { director } from "./director";
 import { rng } from "./textures";
 
-/** Written by LiveBottle every frame, read by the stream right after. */
+/**
+ * LiveBottle writes where the mouth is and whether the bottle is tipped far
+ * enough to pour (`want`); the stream simulates the rest over time.
+ */
 export const pour = {
-  /** 0 → 1: front of the stream travelling down */
+  /** bottle is tipped enough to pour */
+  want: false,
+  /** 0 → 1 eased flow rate (stream thickness), read back by LiveBottle to drain the level */
+  flow: 0,
+  /** stream front / detached top, as fractions of the fall to the bottom of the screen */
   head: 0,
-  /** 0 → 1: top of the stream detaching from the bottle */
   tail: 0,
+  active: false,
   mouth: new THREE.Vector3(),
   dir: new THREE.Vector3(0, -1, 0),
   /** bottle scale (world units per bottle unit) */
@@ -80,14 +87,23 @@ export function PourStream() {
     [],
   );
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const m = mesh.current;
     const dm = drops.current;
     if (!m || !dm) return;
-    const visible = pour.head - pour.tail > 0.002;
-    m.visible = visible;
-    dm.visible = visible;
-    if (!visible) return;
+    const dt = Math.min(delta, 0.05);
+
+    // ---- flow simulation (time-based, not scroll-locked)
+    pour.flow = THREE.MathUtils.damp(pour.flow, pour.want ? 1 : 0, pour.want ? 2.2 : 3.5, dt);
+    if (pour.want && !pour.active) {
+      pour.active = true;
+      pour.head = 0;
+      pour.tail = 0;
+    }
+    if (!pour.active) {
+      m.visible = dm.visible = false;
+      return;
+    }
 
     const time = state.clock.elapsedTime;
     const S = pour.scale;
@@ -101,6 +117,19 @@ export function PourStream() {
     const dy = pour.mouth.y - bottom;
     const tMax = (vy + Math.sqrt(Math.max(0, vy * vy + 2 * g * dy))) / g;
 
+    // fractions advance on the fall's own clock, so the front accelerates like real liquid
+    const rate = dt / Math.max(tMax, 0.2);
+    pour.head = Math.min(1, pour.head + rate);
+    // when the bottle rights itself the stream breaks at the mouth and its last stretch keeps falling
+    if (!pour.want && pour.flow < 0.35) pour.tail = Math.min(pour.head, pour.tail + rate);
+    if (!pour.want && pour.tail >= pour.head - 0.001) {
+      pour.active = false;
+      pour.head = pour.tail = 0;
+      m.visible = dm.visible = false;
+      return;
+    }
+    m.visible = dm.visible = true;
+
     const at = (a: number, out: THREE.Vector3) => {
       const tau = a * tMax;
       return out.set(pour.mouth.x + vx * tau, pour.mouth.y + vy * tau - 0.5 * g * tau * tau, pour.mouth.z + vz * tau);
@@ -112,7 +141,8 @@ export function PourStream() {
 
     const pos = geometry.attributes.position as THREE.BufferAttribute;
     const nor = geometry.attributes.normal as THREE.BufferAttribute;
-    const r0 = 0.085 * S;
+    // thin trickle at the start and end, full stream in between
+    const r0 = 0.085 * S * (0.22 + 0.78 * THREE.MathUtils.smoothstep(pour.flow, 0, 0.8));
     for (let i = 0; i < RINGS; i++) {
       const f = i / (RINGS - 1);
       const a = pour.tail + (pour.head - pour.tail) * f;
