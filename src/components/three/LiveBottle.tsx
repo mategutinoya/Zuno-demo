@@ -181,7 +181,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     if (pp) {
       // cap pops up, spins and flies off to the side
       const o = 1 - Math.pow(1 - ph.cap, 3);
-      pp.cap.position.set(o * 1.1, 1.53 + o * 1.6 + Math.sin(o * Math.PI) * 0.5, o * 0.6);
+      pp.cap.position.set(o * 1.1, 1.462 + o * 1.6 + Math.sin(o * Math.PI) * 0.5, o * 0.6);
       pp.cap.rotation.set(o * 1.2, o * 5, -o * 2.4);
       pp.cap.scale.setScalar(1 - ss(o, 0.75, 1));
       pp.cap.visible = o < 0.999;

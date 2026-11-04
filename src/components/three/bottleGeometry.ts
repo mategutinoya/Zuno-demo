@@ -69,18 +69,25 @@ function build() {
   /** fraction of the interior that is liquid when the bottle is full (upright fill line) */
   const fullFraction = below / (samples.length / 3);
 
-  // Crown cap with crimped flutes
-  const cap = new THREE.CylinderGeometry(0.218, 0.226, 0.22, 126, 6, false);
+  // Crown cork: low and thin, slightly wider than the lip, with 21 short
+  // crimped flutes on the skirt and a flat, domed top
+  const CAP_H = 0.115;
+  const cap = new THREE.CylinderGeometry(0.207, 0.213, CAP_H, 168, 5, false);
   const pos = cap.attributes.position as THREE.BufferAttribute;
   const tmp = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
     tmp.fromBufferAttribute(pos, i);
     const r = Math.hypot(tmp.x, tmp.z);
-    if (r < 0.15) continue;
+    if (r < 0.15) {
+      // gentle dome on the top disc
+      if (tmp.y > 0) pos.setY(i, tmp.y + 0.008 * (1 - (r / 0.207) ** 2));
+      continue;
+    }
     const theta = Math.atan2(tmp.x, tmp.z);
-    const skirt = THREE.MathUtils.smoothstep(-tmp.y, -0.08, 0.11);
-    const flute = 1 + 0.045 * Math.pow(Math.abs(Math.cos(theta * 10.5)), 0.6) * (0.35 + skirt);
-    const flare = 1 + 0.03 * skirt;
+    // 0 at the top shoulder → 1 at the bottom edge of the skirt
+    const skirt = THREE.MathUtils.smoothstep(-tmp.y, -CAP_H * 0.35, CAP_H * 0.5);
+    const flute = 1 + 0.06 * Math.pow(Math.abs(Math.cos(theta * 10.5)), 0.5) * skirt;
+    const flare = 1 + 0.018 * skirt;
     const s = flute * flare;
     pos.setXYZ(i, tmp.x * s, tmp.y, tmp.z * s);
   }

@@ -366,7 +366,7 @@ export const BottleModel = forwardRef<THREE.Group, Props>(function BottleModel(
         <mesh geometry={geo.glass} material={materials.glass} renderOrder={2} />
         <mesh geometry={labelGeo} material={materials.label} position-y={LABEL.centerY} />
         <instancedMesh ref={dropsRef} args={[dropGeo, materials.drop, dropCount]} frustumCulled={false} />
-        <mesh name="cap" geometry={geo.cap} position-y={1.53} material={[materials.cap, materials.capTop, materials.capUnder]} />
+        <mesh name="cap" geometry={geo.cap} position-y={1.462} material={[materials.cap, materials.capTop, materials.capUnder]} />
       </group>
     </group>
   );
