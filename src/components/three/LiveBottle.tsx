@@ -95,6 +95,18 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     const reduce = sceneState.reducedMotion;
     const A = director.anchors;
 
+    // ---- scroll progress with light inertia (drives the opening choreography)
+    const sm = smooth.current;
+    const rawS = window.scrollY / Math.max(1, window.innerHeight);
+    sm.s = sm.s < 0 ? rawS : damp(sm.s, rawS, 7, dt);
+    const scrollS = sm.s;
+
+    // Once you start scrolling, the hero bottle is pinned to its spot on screen
+    // (instead of scrolling away with the hero) and hands over directly to
+    // Our Drink — no detour off the top of the screen.
+    const pin = reduce ? 0 : ss(scrollS, 0.0, 0.12);
+    const heroPinnedY = A.hero.y - window.scrollY * director.k;
+
     // ---- target pose: weighted blend of anchors
     let wsum = 0;
     let tx = 0, ty = 0, ts = 0, trx = 0, try_ = 0, trz = 0;
@@ -105,7 +117,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
       const scale = a.h / BOTTLE.height;
       const p = a.progress - 0.5;
       tx += (a.x + (cfg.driftX ?? 0) * p * a.h) * a.weight;
-      ty += a.y * a.weight;
+      ty += (id === "hero" ? THREE.MathUtils.lerp(a.y, heroPinnedY, pin) : a.y) * a.weight;
       ts += scale * a.weight;
       trx += (cfg.rotX ?? 0) * a.weight;
       try_ += ((cfg.rotY ?? 0) + (cfg.spin ?? 0) * p) * a.weight;
@@ -118,7 +130,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
       if (!P.init) {
         Object.assign(P, { x: tx, y: ty, s: ts, rx: trx, ry: try_, rz: trz, init: true });
       }
-      const l = 5.5;
+      const l = 6.5;
       P.x = damp(P.x, tx, l, dt);
       P.y = damp(P.y, ty, l, dt);
       P.s = damp(P.s, ts, l, dt);
@@ -131,7 +143,6 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     const follow = reduce ? 0 : 1;
     pointer.current.x = damp(pointer.current.x, sceneState.pointer.x * follow, 3, dt);
     pointer.current.y = damp(pointer.current.y, sceneState.pointer.y * follow, 3, dt);
-    const sm = smooth.current;
     sm.vel = damp(sm.vel, THREE.MathUtils.clamp(sceneState.scrollVelocity * 0.004, -0.25, 0.25), 3, dt);
     const vel = sm.vel * follow;
 
@@ -144,20 +155,15 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     const float = reduce ? 0 : Math.sin(t * 1.1) * 0.045 * P.s * BOTTLE.height * 0.3;
 
     // ---- opening pour (only at the very top of the page)
-    const rawS = window.scrollY / Math.max(1, window.innerHeight);
-    sm.s = sm.s < 0 ? rawS : damp(sm.s, rawS, 4.5, dt);
-    const scrollS = sm.s;
     const ph = reduce || e < 0.98 ? pourPhases(0) : pourPhases(scrollS);
 
-    // while pouring, hold the bottle in frame instead of letting it scroll away;
     // on narrow screens tip it a little less and shift it left so the neck stays visible
     const narrow = director.worldW / director.worldH < 0.8;
-    const hold = ph.tilt * scrollS * director.worldH * 0.85;
     const shiftX = narrow ? -ph.tilt * director.worldW * 0.06 : 0;
     const pourScale = narrow ? 1 - 0.28 * ph.tilt : 1;
     const tiltAngle = narrow ? 1.8 : 2.05;
 
-    g.position.set(P.x + pointer.current.x * 0.08 + shiftX, P.y + float + introY - hold, 0);
+    g.position.set(P.x + pointer.current.x * 0.08 + shiftX, P.y + float + introY, 0);
     g.scale.setScalar(Math.max(P.s * introScale * pourScale, 0.0001));
     g.rotation.set(
       P.rx - pointer.current.y * 0.14 + vel * 0.6 + (reduce ? 0 : Math.sin(t * 0.7) * 0.02),
