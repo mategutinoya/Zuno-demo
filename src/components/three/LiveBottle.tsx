@@ -39,8 +39,9 @@ function pourPhases(s: number) {
 export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quality: Quality }) {
   const group = useRef<THREE.Group>(null);
   const materials = useMemo(
-    () => createBottleMaterials(FLAVORS[flavorStore.get()].liquid, labels[flavorStore.get()], quality),
-    [labels, quality],
+    // identical look on every device; `quality` only trims droplet/bubble counts
+    () => createBottleMaterials(FLAVORS[flavorStore.get()].liquid, labels[flavorStore.get()], "high"),
+    [labels],
   );
   const spin = useRef({ value: 0 });
   const shownFlavor = useRef(flavorStore.get());

@@ -63,11 +63,11 @@ function Content({ mobile }: { mobile: boolean }) {
         <>
           <LiveBottle labels={labels} quality={mobile ? "low" : "high"} />
           <PourStream />
-          <FlavorFruits maxPieces={mobile ? 4 : 6} spread={mobile ? 1 : 0.72} />
+          <FlavorFruits maxPieces={6} spread={mobile ? 0.9 : 0.72} />
           <ReadySignal />
         </>
       )}
-      <Particles count={mobile ? 40 : 140} />
+      <Particles count={mobile ? 90 : 140} />
     </>
   );
 }
@@ -79,7 +79,7 @@ export default function Scene({ active }: { active: boolean }) {
     sceneState.isMobile = m;
     return m;
   });
-  const maxDpr = mobile ? 1.25 : 2;
+  const maxDpr = mobile ? 1.5 : 2;
   const [dpr, setDpr] = useState<number>(() => Math.min(window.devicePixelRatio, maxDpr));
 
   return (

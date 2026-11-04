@@ -80,8 +80,8 @@ export function Navbar() {
         className={`relative mx-auto flex h-14 max-w-[1480px] items-center justify-between rounded-full pr-2 pl-5 transition-[background-color,box-shadow,color,border-color] duration-700 ease-(--ease-premium) md:h-16 md:pl-7 ${ink} ${
           scrolled && !open
             ? light
-              ? "border border-ink/10 bg-cream/90 shadow-[0_10px_40px_-20px_rgba(23,19,27,0.35)] md:bg-cream/70 md:backdrop-blur-xl"
-              : "border border-cream/10 bg-ink/85 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.6)] md:bg-ink/45 md:backdrop-blur-xl"
+              ? "border border-ink/10 bg-cream/70 shadow-[0_10px_40px_-20px_rgba(23,19,27,0.35)] backdrop-blur-xl"
+              : "border border-cream/10 bg-ink/45 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl"
             : "border border-transparent"
         }`}
       >

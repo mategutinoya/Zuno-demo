@@ -4,7 +4,6 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import { getFruitGeometry } from "./fruitGeometry";
-import { sceneState } from "@/lib/sceneState";
 import { createAchachairuFleshTexture, createLimeSliceTexture, createPassionPulpTexture } from "./textures";
 
 export type FruitPiece =
@@ -34,8 +33,9 @@ function buildMaterials() {
       color: "#F6EFE8",
       roughness: 0.12,
       clearcoat: 1,
-      // transmission forces an extra scene pass: skip it on phones
-      ...(sceneState.isMobile ? { sheen: 1, sheenColor: new THREE.Color("#ffffff") } : { transmission: 0.35, thickness: 0.4, ior: 1.36 }),
+      transmission: 0.35,
+      thickness: 0.4,
+      ior: 1.36,
     }),
     raspberry: phys({ color: "#D21E4C", roughness: 0.32, clearcoat: 0.6, sheen: 1, sheenColor: new THREE.Color("#FF7A9C") }),
     blackberry: phys({ color: "#24102C", roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05 }),
