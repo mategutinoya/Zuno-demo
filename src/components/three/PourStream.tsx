@@ -28,7 +28,7 @@ const RINGS = 64;
 const SIDES = 14;
 const DROPS = 42;
 /** playback speed of the fall (1 = real time) */
-const SLOW = 0.5;
+const SLOW = 0.4;
 
 /** Liquid pouring out of the bottle, following a real ballistic arc. */
 export function PourStream() {

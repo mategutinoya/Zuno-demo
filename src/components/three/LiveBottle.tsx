@@ -22,10 +22,11 @@ const neckLocal = new THREE.Vector3();
  * cap pops → bottle tips over → liquid pours down → bottle rights itself, cap returns, full again.
  */
 function pourPhases(s: number) {
-  const back = 1 - ss(s, 0.6, 0.78);
+  // starts early, stays tipped for most of the first screen, rights itself late
+  const back = 1 - ss(s, 0.78, 0.94);
   return {
-    cap: ss(s, 0.02, 0.16) * back,
-    tilt: ss(s, 0.06, 0.32) * (1 - ss(s, 0.5, 0.72)),
+    cap: ss(s, 0.01, 0.1) * back,
+    tilt: ss(s, 0.03, 0.2) * (1 - ss(s, 0.64, 0.86)),
   };
 }
 
@@ -199,7 +200,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     // how far (in bottle units) the mouth sits below the liquid surface
     const head = (surfaceY - mouthLocal.y) / unit;
     const capOff = ph.cap > 0.6;
-    pour.want = !reduce && capOff && head > 0.04 && level.current > 0.32;
+    pour.want = !reduce && capOff && head > 0.04 && level.current > 0.22;
     // once the stream breaks, its last stretch is free liquid: it keeps falling
     // from where it left the bottle instead of following the mouth
     if (pour.want) {
@@ -211,7 +212,7 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     // refill — rising smoothly — only once it is upright and capped again
     if (pour.flow > 0.01) {
       const pressure = THREE.MathUtils.clamp(head / 0.6, 0.15, 1);
-      level.current = Math.max(0.3, level.current - dt * 0.1 * pour.flow * pressure);
+      level.current = Math.max(0.2, level.current - dt * 0.06 * pour.flow * pressure);
     } else if (ph.tilt < 0.02 && ph.cap < 0.02) {
       level.current = damp(level.current, 1, 2.2, dt);
     }
