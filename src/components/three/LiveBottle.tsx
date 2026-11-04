@@ -46,6 +46,8 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
   const pointer = useRef({ x: 0, y: 0 });
   /** liquid level 1 = full; drains while pouring, refills once capped and upright */
   const level = useRef(1);
+  /** scroll progress and velocity with inertia, so wheel/touch steps never jerk the bottle */
+  const smooth = useRef({ s: -1, vel: 0 });
   const parts = useRef<{ cap: THREE.Object3D; liquid: THREE.Object3D; bubbles: THREE.Object3D; neck: THREE.Object3D } | null>(null);
 
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
@@ -116,20 +118,22 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
       if (!P.init) {
         Object.assign(P, { x: tx, y: ty, s: ts, rx: trx, ry: try_, rz: trz, init: true });
       }
-      const l = 7;
+      const l = 5.5;
       P.x = damp(P.x, tx, l, dt);
       P.y = damp(P.y, ty, l, dt);
       P.s = damp(P.s, ts, l, dt);
-      P.rx = damp(P.rx, trx, 4, dt);
-      P.ry = damp(P.ry, try_, 4, dt);
-      P.rz = damp(P.rz, trz, 4, dt);
+      P.rx = damp(P.rx, trx, 3.2, dt);
+      P.ry = damp(P.ry, try_, 3.2, dt);
+      P.rz = damp(P.rz, trz, 3.2, dt);
     }
 
     // ---- cursor + scroll velocity
     const follow = reduce ? 0 : 1;
     pointer.current.x = damp(pointer.current.x, sceneState.pointer.x * follow, 3, dt);
     pointer.current.y = damp(pointer.current.y, sceneState.pointer.y * follow, 3, dt);
-    const vel = THREE.MathUtils.clamp(sceneState.scrollVelocity * 0.004, -0.25, 0.25) * follow;
+    const sm = smooth.current;
+    sm.vel = damp(sm.vel, THREE.MathUtils.clamp(sceneState.scrollVelocity * 0.004, -0.25, 0.25), 3, dt);
+    const vel = sm.vel * follow;
 
     // ---- intro choreography
     const e = sceneState.intro;
@@ -140,7 +144,9 @@ export function LiveBottle({ labels, quality }: { labels: THREE.Texture[]; quali
     const float = reduce ? 0 : Math.sin(t * 1.1) * 0.045 * P.s * BOTTLE.height * 0.3;
 
     // ---- opening pour (only at the very top of the page)
-    const scrollS = window.scrollY / Math.max(1, window.innerHeight);
+    const rawS = window.scrollY / Math.max(1, window.innerHeight);
+    sm.s = sm.s < 0 ? rawS : damp(sm.s, rawS, 4.5, dt);
+    const scrollS = sm.s;
     const ph = reduce || e < 0.98 ? pourPhases(0) : pourPhases(scrollS);
 
     // while pouring, hold the bottle in frame instead of letting it scroll away;
